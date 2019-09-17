@@ -5,22 +5,24 @@
 # Message completed?
 # Strategy
 
+import numpy as np
 
 class Agent:
-
-    def __init__(self, id, initMessage, strategy):
+    def __init__(self, id, initMessage, numberAgents):
         self.id = id
         self.message = initMessage
         self.strategy = strategy
-        self.connections = []
+        self.connections = np.empty(numberAgents, dtype=boolean)
         self.completed = false
 
-    def storeConnection(agent):
-        self.connections.append(agent)
+    def getSecrets(self):
+        return self.message
 
-    def makeConnection(agent):
-        self.message = self.message.append(agent.message)
-        storeConnection(agent)
+    def updateSecrets(self, newMessage):
+        self.message.append(newMessage)
+
+    def storeConnection(agent):
+        self.connections[agent.id] = true
 
     def checkCompleted(goalMessage):
         if self.message == goalMessage:
