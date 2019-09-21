@@ -7,24 +7,29 @@
 
 import numpy as np
 
+
 class Agent:
-    def __init__(self, id, initMessage, numberAgents):
+
+    def __init__(self, id, init_message, strategy, num_agents):
         self.id = id
-        self.message = initMessage
+        self.messages = {init_message}
         self.strategy = strategy
-        self.connections = np.empty(numberAgents, dtype=boolean)
-        self.completed = false
+        self.connections = np.empty(num_agents, dtype="?")
+        self.completed = False
 
-    def getSecrets(self):
-        return self.message
+    def get_secrets(self):
+        return self.messages
 
-    def updateSecrets(self, newMessage):
-        self.message.append(newMessage)
+    def update_secrets(self, new_message):
+        self.messages.update(new_message)
 
-    def storeConnection(agent):
-        self.connections[agent.id] = true
+    def store_connections(self, other):
+        self.connections[other.id] = True
 
-    def checkCompleted(goalMessage):
-        if self.message == goalMessage:
-            self.completed = true
+    def check_completed(self, goal_message):
+        if self.messages == goal_message:
+            self.completed = True
         return self.completed
+
+    def print_info(self):
+        print(f"id: {self.id}\nmessages: {self.messages}\nstrategy: {self.strategy}\nconnections: {self.connections}")

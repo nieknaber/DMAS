@@ -3,12 +3,18 @@ import dash_html_components as html
 import dash_core_components as dcc
 from dash.dependencies import Input, Output
 import plotly.graph_objs as go
-
+import math
 import networkx as nx
+
+from src.modelController.model_controller import ModelController
 
 ################### START OF DASH APP ###################
 
+DEFAULT_NUM_AGENTS = 10
+DEFAULT_NUM_CONNECTIONS = 1
+
 app = dash.Dash()
+mc = ModelController(DEFAULT_NUM_AGENTS, DEFAULT_NUM_CONNECTIONS)
 
 # to add ability to use columns
 app.css.append_css({
@@ -27,8 +33,8 @@ app.layout = html.Div(
                             'color': 'black'
                         }
                     ),
-                    html.Div(children=[html.H3("A web application build for the Design of Multi-Agent Sytems course."),
-                        html.Div("This system was build by: Arjan Jawahier (s2762161), Xabi Krant (s2955156), Roeland Lindhout (s2954524) & Niek Naber (s2515970)")], 
+                    html.Div(children=[html.H3("A web application built for the Design of Multi-Agent Sytems course."),
+                        html.Div("This system was built by: Arjan Jawahier (s2762161), Xabi Krant (s2955156), Roeland Lindhout (s2954524) & Niek Naber (s2515970)")],
                     style={
                         'textAlign': 'center',
                         'color': 'black'
@@ -42,8 +48,8 @@ app.layout = html.Div(
                         dcc.Slider(id='num_nodes',
                             min=3,
                             max=100,
-                            marks={i: str(i) if i%10 == 0 else str("") for i in range(3, 101)},
-                            value=25,
+                            marks={i: str(i) if i%5 == 0 else str("") for i in range(3, 101)},
+                            value=DEFAULT_NUM_AGENTS,
                         )
                     ]),
                     html.Div(
@@ -56,7 +62,7 @@ app.layout = html.Div(
                             min=0,
                             max=5,
                             marks={i: str(i) for i in range(0, 6)},
-                            value=2,
+                            value=1,
                         )
                     ]),
                     html.Div(dcc.Graph(id='Graph'))
@@ -68,42 +74,35 @@ app.layout = html.Div(
     Output(component_id='Graph', component_property='figure'),
     [Input(component_id='num_nodes',component_property='value'),
     Input(component_id='num_connections',component_property='value')])
-
 def render_graph(num_nodes, num_connections):
-    # edge = df['itemset'][:num_nodes]
-    
-    # Replaced by random graph
+    # We also need to update the controller
+    mc.update(num_nodes, num_connections)
 
-    #create graph G
-    # G = nx.Graph() 
-    #G.add_nodes_from(node)
-    # G.add_edges_from(edge)
-    #get a x,y position for each node
-    # pos = nx.layout.spring_layout(G)
+    # get a x,y position for each node
+    circle_center = (0, 0)
+    circle_radius = 0.8
+    positions = {i: (circle_center[0] + circle_radius * math.cos(i*2 * math.pi / num_nodes),
+                     circle_center[1] + circle_radius * math.sin(i*2 * math.pi / num_nodes)) for i in range(1, num_nodes + 1)}
 
-    G = nx.random_geometric_graph(num_nodes, 0.25)
+    # Complete graph instead of random?
+    G = nx.complete_graph(num_nodes)
+    for node, position in zip(G.nodes, positions.values()):
+        G.nodes[node]["pos"] = position
 
-    #get a x,y position for each node
-    pos = nx.layout.spring_layout(G)
-
-    #add a pos attribute to each node
-    for node in G.nodes:
-        G.nodes[node]['pos'] = list(pos[node])
-
-    pos=nx.get_node_attributes(G,'pos')
+    pos = nx.get_node_attributes(G,'pos')
 
     dmin=1
     ncenter=0
     for n in pos:
-        x,y=pos[n]
-        d=(x-0.5)**2+(y-0.5)**2
-        if d<dmin:
-            ncenter=n
-            dmin=d
+        x, y = pos[n]
+        d = (x-0.5)**2+(y-0.5)**2
+        if d < dmin:
+            ncenter = n
+            dmin = d
 
-    p=nx.single_source_shortest_path_length(G,ncenter)
+    p = nx.single_source_shortest_path_length(G, ncenter)
 
-    #Create Edges
+    # Create Edges
     edge_trace = go.Scatter(
         x=[],
         y=[],
@@ -146,11 +145,11 @@ def render_graph(num_nodes, num_connections):
         node_trace['x'] += tuple([x])
         node_trace['y'] += tuple([y])
 
-    #add color to node points
+    # add color to node points
     for node, adjacencies in enumerate(G.adjacency()):
         node_trace['marker']['color']+=tuple([len(adjacencies[1])])
         node_info = 'Name: ' + str(adjacencies[0]) + '<br># of connections: '+str(len(adjacencies[1]))
-        node_trace['text']+=tuple([node_info])
+        node_trace['text'] += tuple([node_info])
 
     fig = go.Figure(data=[edge_trace, node_trace],
              layout=go.Layout(
@@ -158,7 +157,7 @@ def render_graph(num_nodes, num_connections):
                 titlefont=dict(size=16),
                 showlegend=False,
                 hovermode='closest',
-                margin=dict(b=20,l=5,r=5,t=40),
+                margin=dict(b=20, l=5, r=5, t=40),
                 annotations=[ dict(
                     showarrow=False,
                     xref="paper", yref="paper",
