@@ -1,5 +1,6 @@
-import src.view.ui as ui
-from src.modelController.model_controller import ModelController
+import view.ui as ui
+from modelController.model_controller import ModelController
+
 
 DEFAULT_NUM_AGENTS = 10
 DEFAULT_NUM_CONNECTIONS = 1

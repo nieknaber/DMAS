@@ -1,4 +1,4 @@
-from src.modelController.agent import Agent
+from modelController.agent import Agent
 import random as rn
 import threading
 import time

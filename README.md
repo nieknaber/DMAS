@@ -6,19 +6,19 @@ This is a project made for the Design of Multi-Agent Systems course given by the
 
 After cloning this repository, some dependencies still need to be installed. If you do not have Python 3.7, it is possible some features of this project do not work in your environment. To download and install Python 3.7, click [this](https://www.python.org/downloads/) link.
 
-Then use the package manager [pip](https://pip.pypa.io/en/stable/) to install the other dependencies.
+Then use the package manager [pip3](https://pip.pypa.io/en/stable/) to install the other dependencies.
 
 ```bash
-pip install numpy
-pip install networkx
-pip install dash
+pip3 install numpy
+pip3 install networkx
+pip3 install dash
 ```
 
 ## Usage
 To run the program, navigate to the DMAS/src/ directory and run start.py.
 
 ```bash
-python start.py
+python3 start.py
 ```
 
 This will cause the Dash app to be running on http://127.0.0.1:8050/.

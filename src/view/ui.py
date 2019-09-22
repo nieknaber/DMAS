@@ -1,10 +1,11 @@
+import networkx as nxl
 import dash
 import dash_html_components as html
 import dash_core_components as dcc
 from dash.dependencies import Input, Output
 import plotly.graph_objs as go
 import math
-import networkx as nx
+
 
 
 def run_ui(model_controller, default_num_agents, default_num_connections):
