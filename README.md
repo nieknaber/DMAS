@@ -1,4 +1,4 @@
-# Gossip Problem
+# Gossip Problem - Group B20
 
 This is a project made for the Design of Multi-Agent Systems course given by the University of Groningen. The gossip problem is a problem where each agent starts out with a unique secret, and the goal is for each agent to have all secrets. Each agent can communicate with one other agent during a single time-step. During this time-step, all secrets agent A knows can be given to agent B, and vice versa.
 
