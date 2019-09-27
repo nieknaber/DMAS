@@ -83,11 +83,16 @@ class ModelController:
 
     def print_agents_secrets(self):
         for agent in self.agents:
-            print(len(agent.messages), end='\t')
+            print(len(agent.messages), end='\t\t')
         print()
 
     def simulate(self):
         # This function is threaded
+        print('Strategy = ' +  self.agents[0].strategy)
+        for agent in self.agents:
+            print(agent, end='\t')
+        print()
+
         while not self.simulation_finished and not self.paused:
             self.exchange_secrets()
 

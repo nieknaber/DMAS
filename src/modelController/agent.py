@@ -32,5 +32,9 @@ class Agent:
             self.completed = True
         return self.completed
 
+    def __repr__ (self):
+        return f"agent({self.id})"
+
+
     def print_info(self):
         print(f"id: {self.id}\nmessages: {self.messages}\nstrategy: {self.strategy}\nconnections: {self.connections}")
