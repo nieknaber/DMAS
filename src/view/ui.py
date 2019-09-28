@@ -1,4 +1,4 @@
-import networkx as nxl
+import networkx as nx
 import dash
 import dash_html_components as html
 import dash_core_components as dcc
@@ -20,7 +20,7 @@ def run_ui(model_controller, default_num_agents, default_num_connections):
 
     app.layout = html.Div(
                     style={
-                            'padding': '30px'
+                        'padding': '30px'
                     },
                     children = [
                         html.H1(
@@ -133,17 +133,13 @@ def run_ui(model_controller, default_num_agents, default_num_connections):
             hoverinfo='text',
             marker=dict(
                 showscale=True,
-                # colorscale options
-                #'Greys' | 'YlGnBu' | 'Greens' | 'YlOrRd' | 'Bluered' | 'RdBu' |
-                #'Reds' | 'Blues' | 'Picnic' | 'Rainbow' | 'Portland' | 'Jet' |
-                #'Hot' | 'Blackbody' | 'Earth' | 'Electric' | 'Viridis' |
                 colorscale='YlGnBu',
                 reversescale=True,
                 color=[],
                 size=10,
                 colorbar=dict(
                     thickness=15,
-                    title='Node Connections',
+                    title='Secrets known',
                     xanchor='left',
                     titleside='right'
                 ),
@@ -154,15 +150,18 @@ def run_ui(model_controller, default_num_agents, default_num_connections):
             node_trace['x'] += tuple([x])
             node_trace['y'] += tuple([y])
 
-        # add color to node points
-        for node, adjacencies in enumerate(G.adjacency()):
-            node_trace['marker']['color']+=tuple([len(adjacencies[1])])
-            node_info = 'Name: ' + str(adjacencies[0]) + '<br># of connections: '+str(len(adjacencies[1]))
-            node_trace['text'] += tuple([node_info])
+        # add color to node points, based on the number of secrets the agents know
+        agents = model_controller.agents
+        for node in G.nodes:
+            agent = agents[node]
+            num_secrets_known = len(agent.secrets)
+            node_trace['marker']['color'] += (num_secrets_known, )
+            node_info = 'Name: ' + str(agent) + '<br># of secrets: ' + str(num_secrets_known)
+            node_trace['text'] += (node_info,)
 
         fig = go.Figure(data=[edge_trace, node_trace],
                  layout=go.Layout(
-                    title='<br>Network Graph of '+str(num_nodes)+' rules',
+                    title='<br>Network Graph of ' + str(num_nodes) + ' agents',
                     titlefont=dict(size=16),
                     showlegend=False,
                     hovermode='closest',
