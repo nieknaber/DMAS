@@ -74,42 +74,39 @@ def run_ui(model_controller, default_num_agents, default_num_connections):
                                     id="start_simulation"
                                 )
                             ]),
-                        html.Div(dcc.Graph(id='Graph'))
+                        html.Div(dcc.Graph(id='Graph', animate=True)),
+                        dcc.Interval(
+                            id='interval_component',
+                            interval=2000, #ms
+                            n_intervals=0
+                        )
                     ]
                 )
 
 
+    # This has to be such a big function because a Dash output can only have one callback connected to it.
+    # And since we want to update the graph with most of what we do, we have to put all that logic in this function.
     @app.callback(
-        Output(component_id='Graph', component_property='figure'),
-        [Input(component_id='num_nodes',component_property='value'),
-        Input(component_id='num_connections',component_property='value')])
-    def render_graph(num_nodes, num_connections):
+        Output('Graph','figure'),
+        [Input('num_nodes','value'),
+        Input('num_connections','value'),
+        Input('interval_component','n_intervals')])
+    def render_graph(num_nodes, num_connections, n_intervals):
         # We also need to update the controller
         model_controller.update(num_nodes, num_connections)
+        simulation_finished = model_controller.simulate_from_ui()
 
-        # get a x,y position for each node
+        # Calculate positions for the nodes of the graph
         circle_center = (0, 0)
         circle_radius = 0.8
         positions = {i: (circle_center[0] + circle_radius * math.cos(i*2 * math.pi / num_nodes),
                          circle_center[1] + circle_radius * math.sin(i*2 * math.pi / num_nodes)) for i in range(1, num_nodes + 1)}
 
-        # Complete graph instead of random?
+        # Make a complete graph
         G = nx.complete_graph(num_nodes)
         for node, position in zip(G.nodes, positions.values()):
             G.nodes[node]["pos"] = position
-
         pos = nx.get_node_attributes(G,'pos')
-
-        dmin=1
-        ncenter=0
-        for n in pos:
-            x, y = pos[n]
-            d = (x-0.5)**2+(y-0.5)**2
-            if d < dmin:
-                ncenter = n
-                dmin = d
-
-        p = nx.single_source_shortest_path_length(G, ncenter)
 
         # Create Edges
         edge_trace = go.Scatter(
@@ -133,10 +130,12 @@ def run_ui(model_controller, default_num_agents, default_num_connections):
             hoverinfo='text',
             marker=dict(
                 showscale=True,
-                colorscale='YlGnBu',
+                colorscale='Magma',
                 reversescale=True,
                 color=[],
-                size=10,
+                cmax=len(model_controller.agents),
+                cmin=1,
+                size=40,
                 colorbar=dict(
                     thickness=15,
                     title='Secrets known',
@@ -173,8 +172,21 @@ def run_ui(model_controller, default_num_agents, default_num_connections):
                     xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
                     yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)))
 
+        # This part adds red edges on the graph to signify which connections have been made
+        additional_edge_traces = model_controller.connections
+        for aet in additional_edge_traces:
+            node1, node2 = aet
+            x1, y1 = G.nodes[node1]['pos']
+            x2, y2 = G.nodes[node2]['pos']
+            line = go.Scatter(x=[x1, x2],
+                              y=[y1, y2],
+                              mode='lines',
+                              line=go.scatter.Line(color='red'))
+            fig.add_trace(line)
+
         return fig
 
+    # This callback is linked to the button on the webpage. It starts and pauses the simulation
     @app.callback(
         [Output(component_id='start_simulation', component_property='children'),
          Output(component_id='start_simulation', component_property='disabled')],
