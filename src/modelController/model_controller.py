@@ -28,38 +28,6 @@ class ModelController:
         self.num_connections = num_connections
         self.init_agents()
 
-    def exchange_secrets(self):
-        # TODO: Fix bug in this function
-        called = set()
-        # We shuffle the agents to fairly determine who goes first
-        shuffled_agents = self.agents.copy()
-        rn.shuffle(shuffled_agents)
-        for agent in shuffled_agents:
-            temp_list = self.agents.copy()
-            temp_list.remove(agent)
-
-            for called_agent in called:
-                if called_agent in temp_list:
-                    temp_list.remove(called_agent)
-
-            if len(temp_list) > 0:
-                connection_agent = rn.choice(temp_list)
-
-                # These 4 lines sometimes show the bug, agents can sometimes call twice!
-                if agent.id == 0:
-                    print(f"0 called {connection_agent.id}")
-                if connection_agent.id == 0:
-                    print(f"{connection_agent.id} called {agent.id}")
-
-                # Done like this to prevent messages from stacking during one timestep
-                agent.incoming_messages.update(connection_agent.messages)
-                connection_agent.incoming_messages.update(agent.messages)
-                called.add(agent)
-                called.add(connection_agent)
-
-        for agent in self.agents:
-            agent.update_secrets()
-
     def start_simulation(self):
         print("started simulation!")
         self.active_threads[0].start()
@@ -83,12 +51,45 @@ class ModelController:
 
     def print_agents_secrets(self):
         for agent in self.agents:
-            print(len(agent.messages), end='\t\t')
+            print(len(agent.secrets), end='\t')
         print()
+
+    def exchange_secrets(self):
+        called = set()
+        shuffled_agents = self.agents.copy()
+
+        # We shuffle the agents to fairly determine who goes first
+        rn.shuffle(shuffled_agents)
+        for agent in shuffled_agents:
+            # If the agent is already in the called set, we skip it
+            if agent in called:
+                continue
+
+            # We need to remove the called agents from the callable agents
+            callable = self.agents.copy()  # IF we are not going for a fully connected graph, we should change this line
+            callable.remove(agent)
+            for called_agent in called:
+                if called_agent in callable:
+                    callable.remove(called_agent)
+
+            # Only choose an agent if there is at least one callable agent
+            if len(callable) > 0:
+                connection_agent = rn.choice(callable)
+                
+                # Prevent secrets from stacking during one timestep 
+                # (use incoming secrets instead of directly updating secrets)
+                agent.incoming_secrets.update(connection_agent.secrets)
+                connection_agent.incoming_secrets.update(agent.secrets)
+                called.add(agent)
+                called.add(connection_agent)
+
+        for agent in self.agents:
+            agent.update_secrets()
 
     def simulate(self):
         # This function is threaded
         print('Strategy = ' +  self.agents[0].strategy)
+        print('Table showing the number of secrets each agent knows:')
         for agent in self.agents:
             print(agent, end='\t')
         print()
@@ -99,7 +100,7 @@ class ModelController:
             broken_out_of_loop = False
             # If all agents know each secret, simulation is finished
             for agent in self.agents:
-                if len(agent.messages) < len(self.agents):
+                if len(agent.secrets) < len(self.agents):
                     # Not finished yet
                     broken_out_of_loop = True
                     break
@@ -113,4 +114,4 @@ class ModelController:
             self.timesteps_taken += 1
             time.sleep(1)
 
-        print("End of simulation!")
+        print(f"End of simulation, after {self.timesteps_taken} time-steps.")
