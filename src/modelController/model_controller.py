@@ -49,11 +49,16 @@ class ModelController:
         self.paused = False
         print("Stopped simulation!")
 
+    def reset_simulation(self):
+        self.__init__(self.num_agents, self.num_connections)
+        print("Simulation reset!")
+
     def print_agents_secrets(self):
         for agent in self.agents:
             print(len(agent.secrets), end='\t')
         print()
 
+    # TODO: We should refactor this function later
     def exchange_secrets(self):
         called = set()
         shuffled_agents = self.agents.copy()
@@ -73,46 +78,42 @@ class ModelController:
                 if called_agent in callable:
                     callable.remove(called_agent)
 
-            # Only choose an agent if there is at least one callable agent
+            # Call-Me-Once strategy
+            if agent.strategy == 'Call-Me-Once':
+                # If the agent has called the other agent already
+                # another agent is randomly chosen
+                for connected_agent in agent.connections:
+                    if connected_agent in callable:
+                        callable.remove(connected_agent)
+
+            if agent.strategy == 'Learn-New-Secrets':
+                # If an agent has the same set of secrets as this agent, it is removed from the callable list
+                for other_agent in self.agents:
+                    if other_agent.secrets == agent.secrets and other_agent in callable:
+                        callable.remove(other_agent)
+
+            # Only try to call if there are agents to call
             if len(callable) > 0:
                 connection_agent = rn.choice(callable)
-
-                # Call-Me-Once strategy
-                if (agent.strategy == 'Call-Me-Once'):
-                    # If the agent has called the other agent already
-                    # another agent is randomly chosen
-                    while agent.connections[connection_agent.id] == True :
-                        connection_agent = rn.choice(callable)
-
-                    # The connection is tored for both agents,
-                    # so they cannot call eachother again
-                    agent.store_connections(connection_agent)
-                    connection_agent.store_connections(agent)
-
-                if (agent.strategy == 'Learn-New-Secrets'):
-                    # If the agents have the same set of secrets,
-                    # they will not learn a new secret, so another agent is chosen
-                    while agent.secrets == connection_agent.secrets :
-                        connection_agent = rn.choice(callable)
-
                 # Prevent secrets from stacking during one timestep
                 # (use incoming secrets instead of directly updating secrets)
                 agent.incoming_secrets.update(connection_agent.secrets)
                 connection_agent.incoming_secrets.update(agent.secrets)
                 called.add(agent)
                 called.add(connection_agent)
-                # Add the connection, so we can highlight it in the ui
-                self.connections.append((min(agent.id, connection_agent.id), max(agent.id, connection_agent.id)))
 
+                # The connection is stored for both agents, so they wont call each other again if the strategy is CMO
+                agent.store_connections(connection_agent)
+                connection_agent.store_connections(agent)
+
+                # Add the connection in the controller, so we can highlight it in the UI
+                self.connections.append((min(agent.id, connection_agent.id), max(agent.id, connection_agent.id)))
 
         for agent in self.agents:
             agent.update_secrets()
 
     def simulate_from_ui(self):
-        # This function is not threaded and most likely better than simulate
-
         if self.started and not self.simulation_finished:
-            # while not self.simulation_finished and not self.paused:
             self.exchange_secrets()
             self.print_agents_secrets()
             self.timesteps_taken += 1
@@ -128,6 +129,3 @@ class ModelController:
                 self.simulation_finished = True
                 print(f"End of simulation, after {self.timesteps_taken} time-steps.")
 
-            self.print_agents_secrets()
-            self.timesteps_taken += 1
-            time.sleep(1)

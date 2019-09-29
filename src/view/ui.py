@@ -72,6 +72,12 @@ def run_ui(model_controller, default_num_agents, default_num_connections):
                                         html.Label("Start simulation")
                                     ],
                                     id="start_simulation"
+                                ),
+                                html.Button(
+                                    children=[
+                                        html.Label("Reset simulation")
+                                    ],
+                                    id="reset_simulation"
                                 )
                             ]),
                         html.Div(
@@ -86,6 +92,7 @@ def run_ui(model_controller, default_num_agents, default_num_connections):
                             ),
                             id="output-strategy"
                         ),
+                        html.Div(html.P(id='timestep')),
                         html.Div(dcc.Graph(id='Graph', animate=True)),
                         dcc.Interval(
                             id='interval_component',
@@ -99,7 +106,8 @@ def run_ui(model_controller, default_num_agents, default_num_connections):
     # This has to be such a big function because a Dash output can only have one callback connected to it.
     # And since we want to update the graph with most of what we do, we have to put all that logic in this function.
     @app.callback(
-        Output('Graph','figure'),
+        [Output('Graph','figure'),
+        Output('timestep', 'children')],
         [Input('num_nodes','value'),
         Input('num_connections','value'),
         Input('interval_component','n_intervals')])
@@ -171,8 +179,9 @@ def run_ui(model_controller, default_num_agents, default_num_connections):
             node_trace['text'] += (node_info,)
 
         fig = go.Figure(data=[edge_trace, node_trace],
-                 layout=go.Layout(
-                    title='<br>Network Graph of ' + str(num_nodes) + ' agents',
+                    layout=go.Layout(
+                    # title='<br>Network Graph of ' + str(num_nodes) + ' agents',
+                    title='',
                     titlefont=dict(size=16),
                     showlegend=False,
                     hovermode='closest',
@@ -196,7 +205,7 @@ def run_ui(model_controller, default_num_agents, default_num_connections):
                               line=go.scatter.Line(color='red'))
             fig.add_trace(line)
 
-        return fig
+        return fig, 'Time step: ' + str(model_controller.timesteps_taken)
 
     # This callback is linked to the button on the webpage. It starts and pauses the simulation
     @app.callback(
@@ -222,5 +231,15 @@ def run_ui(model_controller, default_num_agents, default_num_connections):
                 button_text = "Resume simulation"
                 model_controller.pause_simulation()
         return button_text, button_disabled
+
+    @app.callback(
+        [Output(component_id='reset_simulation', component_property='disabled'),
+        Output(component_id='start_simulation', component_property='n_clicks')],
+        [Input(component_id='reset_simulation', component_property='n_clicks')])
+    def start_simulation(n_clicks):
+        button_disabled = False
+        if n_clicks is not None:
+            model_controller.reset_simulation()
+        return button_disabled, None
 
     app.run_server(debug=True)
