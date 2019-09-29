@@ -20,7 +20,7 @@ class ModelController:
     def init_agents(self):
         self.agents = []
         for i in range(self.num_agents):
-            self.agents.append(Agent(i, f"Secret {i}", "Random", self.num_agents))
+            self.agents.append(Agent(i, f"Secret {i}", "Learn-New-Secrets", self.num_agents))
 
     def update(self, num_agents, num_connections):
         if not self.started:
@@ -77,6 +77,24 @@ class ModelController:
             if len(callable) > 0:
                 connection_agent = rn.choice(callable)
 
+                # Call-Me-Once strategy
+                if (agent.strategy == 'Call-Me-Once'):
+                    # If the agent has called the other agent already
+                    # another agent is randomly chosen
+                    while agent.connections[connection_agent.id] == True :
+                        connection_agent = rn.choice(callable)
+
+                    # The connection is tored for both agents,
+                    # so they cannot call eachother again
+                    agent.store_connections(connection_agent)
+                    connection_agent.store_connections(agent)
+
+                if (agent.strategy == 'Learn-New-Secrets'):
+                    # If the agents have the same set of secrets,
+                    # they will not learn a new secret, so another agent is chosen
+                    while agent.secrets == connection_agent.secrets :
+                        connection_agent = rn.choice(callable)
+
                 # Prevent secrets from stacking during one timestep
                 # (use incoming secrets instead of directly updating secrets)
                 agent.incoming_secrets.update(connection_agent.secrets)
@@ -85,6 +103,7 @@ class ModelController:
                 called.add(connection_agent)
                 # Add the connection, so we can highlight it in the ui
                 self.connections.append((min(agent.id, connection_agent.id), max(agent.id, connection_agent.id)))
+
 
         for agent in self.agents:
             agent.update_secrets()
@@ -112,5 +131,3 @@ class ModelController:
             self.print_agents_secrets()
             self.timesteps_taken += 1
             time.sleep(1)
-
-        print("End of simulation!\nNumber of timesteps: ", self.timesteps_taken)
