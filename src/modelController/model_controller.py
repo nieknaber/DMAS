@@ -20,7 +20,7 @@ class ModelController:
     def init_agents(self):
         self.agents = []
         for i in range(self.num_agents):
-            self.agents.append(Agent(i, f"Secret {i}", "Placeholder strategy", self.num_agents))
+            self.agents.append(Agent(i, f"Secret {i}", "Random", self.num_agents))
 
     def update(self, num_agents, num_connections):
         if not self.started:
@@ -109,6 +109,14 @@ class ModelController:
                 self.simulation_finished = True
                 print(f"End of simulation, after {self.timesteps_taken} time-steps.")
 
+<<<<<<< HEAD
+            self.print_agents_secrets()
+            self.timesteps_taken += 1
+            time.sleep(1)
+
+        print("End of simulation!\nNumber of timesteps: ", self.timesteps_taken)
+=======
         return self.simulation_finished
             
             
+>>>>>>> 413014d61e436a0046a63406a34f74ee17fce3ca
