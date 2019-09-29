@@ -21,7 +21,7 @@ class ModelController:
     def init_agents(self):
         self.agents = []
         for i in range(self.num_agents):
-            self.agents.append(Agent(i, f"Secret {i}", "Placeholder strategy", self.num_agents))
+            self.agents.append(Agent(i, f"Secret {i}", "Random", self.num_agents))
 
     def update(self, num_agents, num_connections):
         self.num_agents = num_agents
@@ -113,4 +113,4 @@ class ModelController:
             self.timesteps_taken += 1
             time.sleep(1)
 
-        print("End of simulation!")
+        print("End of simulation!\nNumber of timesteps: ", self.timesteps_taken)
