@@ -76,8 +76,8 @@ class ModelController:
             # Only choose an agent if there is at least one callable agent
             if len(callable) > 0:
                 connection_agent = rn.choice(callable)
-                
-                # Prevent secrets from stacking during one timestep 
+
+                # Prevent secrets from stacking during one timestep
                 # (use incoming secrets instead of directly updating secrets)
                 agent.incoming_secrets.update(connection_agent.secrets)
                 connection_agent.incoming_secrets.update(agent.secrets)
@@ -109,14 +109,8 @@ class ModelController:
                 self.simulation_finished = True
                 print(f"End of simulation, after {self.timesteps_taken} time-steps.")
 
-<<<<<<< HEAD
             self.print_agents_secrets()
             self.timesteps_taken += 1
             time.sleep(1)
 
         print("End of simulation!\nNumber of timesteps: ", self.timesteps_taken)
-=======
-        return self.simulation_finished
-            
-            
->>>>>>> 413014d61e436a0046a63406a34f74ee17fce3ca
