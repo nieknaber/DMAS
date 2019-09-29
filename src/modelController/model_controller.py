@@ -49,6 +49,10 @@ class ModelController:
         self.paused = False
         print("Stopped simulation!")
 
+    def reset_simulation(self):
+        self.__init__(self.num_agents, self.num_connections)
+        print("Simulation reset!")
+
     def print_agents_secrets(self):
         for agent in self.agents:
             print(len(agent.secrets), end='\t')

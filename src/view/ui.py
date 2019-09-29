@@ -72,6 +72,12 @@ def run_ui(model_controller, default_num_agents, default_num_connections):
                                         html.Label("Start simulation")
                                     ],
                                     id="start_simulation"
+                                ),
+                                html.Button(
+                                    children=[
+                                        html.Label("Reset simulation")
+                                    ],
+                                    id="reset_simulation"
                                 )
                             ]),
                         html.Div(
@@ -172,7 +178,7 @@ def run_ui(model_controller, default_num_agents, default_num_connections):
 
         fig = go.Figure(data=[edge_trace, node_trace],
                  layout=go.Layout(
-                    title='<br>Network Graph of ' + str(num_nodes) + ' agents',
+                    title='<br>Network Graph of ' + str(num_nodes) + ' agents<br>Time step: ' +  str(model_controller.timesteps_taken),
                     titlefont=dict(size=16),
                     showlegend=False,
                     hovermode='closest',
@@ -222,5 +228,15 @@ def run_ui(model_controller, default_num_agents, default_num_connections):
                 button_text = "Resume simulation"
                 model_controller.pause_simulation()
         return button_text, button_disabled
+
+    @app.callback(
+        [Output(component_id='reset_simulation', component_property='disabled'),
+        Output(component_id='start_simulation', component_property='n_clicks')],
+        [Input(component_id='reset_simulation', component_property='n_clicks')])
+    def start_simulation(n_clicks):
+        button_disabled = False
+        if n_clicks is not None:
+            model_controller.reset_simulation()
+        return button_disabled, None
 
     app.run_server(debug=True)
