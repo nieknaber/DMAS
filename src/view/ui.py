@@ -74,6 +74,18 @@ def run_ui(model_controller, default_num_agents, default_num_connections):
                                     id="start_simulation"
                                 )
                             ]),
+                        html.Div(
+                            dcc.Dropdown(
+                                id='strategy',
+                                options=[
+                                    {'label': 'Random', 'value': 'Random'},
+                                    {'label': 'Call Me Once', 'value': 'Call-Me-Once'},
+                                    {'label': 'Learn New Secrets', 'value': 'Learn-New-Secrets'}
+                                ],
+                                placeholder = 'Select a strategy (not working ATM)'
+                            ),
+                            id="output-strategy"
+                        ),
                         html.Div(dcc.Graph(id='Graph', animate=True)),
                         dcc.Interval(
                             id='interval_component',
