@@ -6,7 +6,7 @@ import time
 
 class ModelController:
 
-    def __init__(self, num_agents, num_connections):
+    def __init__(self, num_agents, num_connections, strategy):
         self.num_agents = num_agents
         self.num_connections = num_connections
         self.agents = []
@@ -15,17 +15,19 @@ class ModelController:
         self.started = False
         self.paused = False
         self.connections = []
+        self.strategy = strategy
         self.init_agents()
 
     def init_agents(self):
         self.agents = []
         for i in range(self.num_agents):
-            self.agents.append(Agent(i, f"Secret {i}", "Learn-New-Secrets", self.num_agents))
+            self.agents.append(Agent(i, f"Secret {i}", self.strategy, self.num_agents))
 
-    def update(self, num_agents, num_connections):
+    def update(self, num_agents, num_connections, strategy):
         if not self.started:
             self.num_agents = num_agents
             self.num_connections = num_connections
+            self.strategy = strategy
             self.init_agents()
 
     def start_simulation(self):
@@ -50,7 +52,7 @@ class ModelController:
         print("Stopped simulation!")
 
     def reset_simulation(self):
-        self.__init__(self.num_agents, self.num_connections)
+        self.__init__(self.num_agents, self.num_connections, self.strategy)
         print("Simulation reset!")
 
     def print_agents_secrets(self):
@@ -68,15 +70,20 @@ class ModelController:
         rn.shuffle(shuffled_agents)
         for agent in shuffled_agents:
             # If the agent is already in the called set, we skip it
-            if agent in called:
+            if agent in called or agent.has_token == False:
                 continue
-
+                    
             # We need to remove the called agents from the callable agents
-            callable = self.agents.copy()  # IF we are not going for a fully connected graph, we should change this line
+            callable = self.agents.copy()  # If we are not going for a fully connected graph, we should change this line
             callable.remove(agent)
             for called_agent in called:
                 if called_agent in callable:
                     callable.remove(called_agent)
+
+            if agent.strategy == 'Token-improved' or agent.strategy == 'Spider-improved':
+                for other_agent in self.agents:
+                    if len(other_agent.secrets) == len(self.agents) and other_agent in callable:
+                        callable.remove(other_agent)
 
             # Call-Me-Once strategy
             if agent.strategy == 'Call-Me-Once':
@@ -98,9 +105,16 @@ class ModelController:
                 # Prevent secrets from stacking during one timestep
                 # (use incoming secrets instead of directly updating secrets)
                 agent.incoming_secrets.update(connection_agent.secrets)
+                agent.incoming_secrets.update(connection_agent.secrets)
                 connection_agent.incoming_secrets.update(agent.secrets)
                 called.add(agent)
                 called.add(connection_agent)
+
+                if "Token" in agent.strategy:
+                    agent.give_token(connection_agent)
+
+                if "Spider" in agent.strategy:
+                    connection_agent.give_token(agent)
 
                 # The connection is stored for both agents, so they wont call each other again if the strategy is CMO
                 agent.store_connections(connection_agent)

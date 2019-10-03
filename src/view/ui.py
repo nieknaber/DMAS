@@ -6,8 +6,6 @@ from dash.dependencies import Input, Output
 import plotly.graph_objs as go
 import math
 
-
-
 def run_ui(model_controller, default_num_agents, default_num_connections):
     ################### START OF DASH APP ###################
 
@@ -86,14 +84,22 @@ def run_ui(model_controller, default_num_agents, default_num_connections):
                                 options=[
                                     {'label': 'Random', 'value': 'Random'},
                                     {'label': 'Call Me Once', 'value': 'Call-Me-Once'},
-                                    {'label': 'Learn New Secrets', 'value': 'Learn-New-Secrets'}
+                                    {'label': 'Learn New Secrets', 'value': 'Learn-New-Secrets'},
+                                    {'label': 'Token', 'value': 'Token'},
+                                    {'label': 'Spider', 'value': 'Spider'},
+                                    {'label': 'Token (improved)', 'value': 'Token-improved'},
+                                    {'label': 'Spider (improved)', 'value': 'Spider-improved'}
                                 ],
-                                placeholder = 'Select a strategy (not working ATM)'
+                                value = 'Random'
                             ),
                             id="output-strategy"
                         ),
                         html.Div(html.P(id='timestep')),
-                        html.Div(dcc.Graph(id='Graph', animate=True)),
+                        html.Div(dcc.Graph(id='Graph', animate=False,
+                            style={
+                                'display': 'none'
+                            }
+                        )),
                         dcc.Interval(
                             id='interval_component',
                             interval=2000, #ms
@@ -107,13 +113,15 @@ def run_ui(model_controller, default_num_agents, default_num_connections):
     # And since we want to update the graph with most of what we do, we have to put all that logic in this function.
     @app.callback(
         [Output('Graph','figure'),
+        Output('Graph','style'),
         Output('timestep', 'children')],
         [Input('num_nodes','value'),
         Input('num_connections','value'),
-        Input('interval_component','n_intervals')])
-    def render_graph(num_nodes, num_connections, n_intervals):
+        Input('interval_component','n_intervals'),
+        Input('strategy','value')])
+    def render_graph(num_nodes, num_connections, n_intervals, strategy):
         # We also need to update the controller
-        model_controller.update(num_nodes, num_connections)
+        model_controller.update(num_nodes, num_connections, strategy)
         simulation_finished = model_controller.simulate_from_ui()
 
         # Calculate positions for the nodes of the graph
@@ -123,7 +131,12 @@ def run_ui(model_controller, default_num_agents, default_num_connections):
                          circle_center[1] + circle_radius * math.sin(i*2 * math.pi / num_nodes)) for i in range(1, num_nodes + 1)}
 
         # Make a complete graph
-        G = nx.complete_graph(num_nodes)
+        if(num_nodes < 11):
+            G = nx.complete_graph(num_nodes)
+        else:
+            G = nx.Graph()
+            for i in range(num_nodes):
+                G.add_node(i)
         for node, position in zip(G.nodes, positions.values()):
             G.nodes[node]["pos"] = position
         pos = nx.get_node_attributes(G,'pos')
@@ -155,7 +168,7 @@ def run_ui(model_controller, default_num_agents, default_num_connections):
                 color=[],
                 cmax=len(model_controller.agents),
                 cmin=1,
-                size=40,
+                size=100//math.sqrt(num_nodes)+10,
                 colorbar=dict(
                     thickness=15,
                     title='Secrets known',
@@ -205,7 +218,12 @@ def run_ui(model_controller, default_num_agents, default_num_connections):
                               line=go.scatter.Line(color='red'))
             fig.add_trace(line)
 
-        return fig, 'Time step: ' + str(model_controller.timesteps_taken)
+        style={
+                'height': '800px',
+                'width': '800px'
+        }
+
+        return fig, style,  'Time step: ' + str(model_controller.timesteps_taken)
 
     # This callback is linked to the button on the webpage. It starts and pauses the simulation
     @app.callback(
