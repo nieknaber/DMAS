@@ -92,12 +92,7 @@ def run_ui(model_controller, default_num_agents, default_num_connections):
                             ),
                             id="output-strategy"
                         ),
-<<<<<<< HEAD
                         html.Div(dcc.Graph(id='Graph', animate=False)),
-=======
-                        html.Div(html.P(id='timestep')),
-                        html.Div(dcc.Graph(id='Graph', animate=True)),
->>>>>>> 0cefd79b266d8c6afbb8575f8aba09259cadd18a
                         dcc.Interval(
                             id='interval_component',
                             interval=2000, #ms
