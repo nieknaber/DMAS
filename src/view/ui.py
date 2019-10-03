@@ -92,7 +92,12 @@ def run_ui(model_controller, default_num_agents, default_num_connections):
                             ),
                             id="output-strategy"
                         ),
+<<<<<<< HEAD
                         html.Div(dcc.Graph(id='Graph', animate=False)),
+=======
+                        html.Div(html.P(id='timestep')),
+                        html.Div(dcc.Graph(id='Graph', animate=True)),
+>>>>>>> 0cefd79b266d8c6afbb8575f8aba09259cadd18a
                         dcc.Interval(
                             id='interval_component',
                             interval=2000, #ms
@@ -105,7 +110,8 @@ def run_ui(model_controller, default_num_agents, default_num_connections):
     # This has to be such a big function because a Dash output can only have one callback connected to it.
     # And since we want to update the graph with most of what we do, we have to put all that logic in this function.
     @app.callback(
-        Output('Graph','figure'),
+        [Output('Graph','figure'),
+        Output('timestep', 'children')],
         [Input('num_nodes','value'),
         Input('num_connections','value'),
         Input('interval_component','n_intervals')])
@@ -177,8 +183,9 @@ def run_ui(model_controller, default_num_agents, default_num_connections):
             node_trace['text'] += (node_info,)
 
         fig = go.Figure(data=[edge_trace, node_trace],
-                 layout=go.Layout(
-                    title='<br>Network Graph of ' + str(num_nodes) + ' agents<br>Time step: ' +  str(model_controller.timesteps_taken),
+                    layout=go.Layout(
+                    # title='<br>Network Graph of ' + str(num_nodes) + ' agents',
+                    title='',
                     titlefont=dict(size=16),
                     showlegend=False,
                     hovermode='closest',
@@ -202,7 +209,7 @@ def run_ui(model_controller, default_num_agents, default_num_connections):
                               line=go.scatter.Line(color='red'))
             fig.add_trace(line)
 
-        return fig
+        return fig, 'Time step: ' + str(model_controller.timesteps_taken)
 
     # This callback is linked to the button on the webpage. It starts and pauses the simulation
     @app.callback(
