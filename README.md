@@ -1,10 +1,5 @@
 # Gossip Problem - Group B20
 
-## Report
-
-The alpha version of the report can be found in report/Design_of_Multi_Agent_Systems_alphaVersion.pdf
-
-
 This is a project made for the Design of Multi-Agent Systems course given by the University of Groningen. The gossip problem is a problem where each agent starts out with a unique secret, and the goal is for each agent to have all secrets. Each agent can communicate with one other agent during a single time-step. During this time-step, all secrets agent A knows can be given to agent B, and vice versa.
 
 ## Installation
@@ -20,7 +15,7 @@ pip3 install dash
 ```
 
 ## Usage
-To run the program, navigate to the DMAS/src/ directory and run start.py.
+To run the program, navigate to the DMAS-Gossip-Problem-B20/src/ directory and run start.py.
 
 ```bash
 python3 start.py
