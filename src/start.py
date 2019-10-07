@@ -1,3 +1,8 @@
+"""start.py is the starting module for this program.
+
+It initiates a controller and passes that controller to the UI.
+"""
+
 import view.ui as ui
 from modelController.model_controller import ModelController
 
