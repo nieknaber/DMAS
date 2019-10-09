@@ -20,7 +20,7 @@ class ModelController:
         self.init_agents()
 
     def init_agents(self):
-        
+        self.agents = []
         for i in range(self.num_agents):
             self.agents.append(Agent(i, f"Secret {i}", self.strategy, self.num_agents))
 
