@@ -2,6 +2,7 @@ from modelController.agent import Agent
 import random as rn
 import threading
 import time
+import numpy as np
 
 
 class ModelController:
@@ -19,9 +20,11 @@ class ModelController:
         self.init_agents()
 
     def init_agents(self):
-        self.agents = []
+        
         for i in range(self.num_agents):
             self.agents.append(Agent(i, f"Secret {i}", self.strategy, self.num_agents))
+
+        self.numpyAgents = np.array(self.agents)
 
     def update(self, num_agents, num_connections, strategy):
         if not self.started:
@@ -59,6 +62,19 @@ class ModelController:
         for agent in self.agents:
             print(len(agent.secrets), end='\t')
         print()
+
+    def find(self, callable, idx):
+        for agent in callable:
+            if agent.id == idx:
+                return True
+
+        return False
+
+    def solve(self, idx, callable):
+        if self.find(callable, idx):
+            return self.numpyAgents[idx]
+        
+        return self.solve((idx + 1) % self.num_agents, callable)
 
     # TODO: We should refactor this function later
     def exchange_secrets(self):
@@ -103,6 +119,15 @@ class ModelController:
             if len(callable) > 0:
                 rn.shuffle(callable)
                 connection_agent = None
+                
+                # idx of agent that is going to be called
+                # agent.id + 1 because we want to do math with indexes > 0. In the end we correct by subtracting 1.
+                # timesteps_taken + 2 because 0 results in idx = 0 every time, and if we would do plus 1, all agents
+                # would try to call themselves in the first time step
+                if agent.strategy == 'mathematical':
+                    idx = (agent.id + 1) * (self.timesteps_taken + 2) - 1
+                    connection_agent = self.solve(idx, callable) # get first agent, starting from this id, that is still available
+                    
                 if agent.strategy == 'Call-Max-Secrets':
                     max_known = 0
                     for callable_agent in callable:
