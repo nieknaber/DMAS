@@ -87,6 +87,12 @@ def run_ui(model_controller, default_num_agents, default_num_connections):
                                     {'label': 'Random', 'value': 'Random'},
                                     {'label': 'Call Me Once', 'value': 'Call-Me-Once'},
                                     {'label': 'Learn New Secrets', 'value': 'Learn-New-Secrets'},
+<<<<<<< HEAD
+=======
+                                    {'label': 'Call minimum secrets', 'value': 'Call-Min-Secrets'},
+                                    {'label': 'Call most secrets', 'value': 'Call-Max-Secrets'},
+                                    {'label': 'Call best secrets', 'value': 'Call-Best-Secrets'},
+>>>>>>> refs/remotes/origin/master
                                     {'label': 'Token', 'value': 'Token'},
                                     {'label': 'Spider', 'value': 'Spider'},
                                     {'label': 'Token (improved)', 'value': 'Token-improved'},
@@ -121,6 +127,7 @@ def run_ui(model_controller, default_num_agents, default_num_connections):
         Input('interval_component','n_intervals'),
         Input('strategy','value')])
     def render_graph(num_nodes, num_connections, n_intervals, strategy):
+<<<<<<< HEAD
         """Creates the nodes-and-edges graph that is displayed in the web-browser.
 
         The decorator specifies which inputs and outputs this function has.
@@ -139,6 +146,8 @@ def run_ui(model_controller, default_num_agents, default_num_connections):
             Number of time-steps -- The number of time-steps is displayed in a div in
                 the Dash-app
         """
+=======
+>>>>>>> refs/remotes/origin/master
         # We also need to update the controller
         model_controller.update(num_nodes, num_connections, strategy)
         simulation_finished = model_controller.simulate_from_ui()
