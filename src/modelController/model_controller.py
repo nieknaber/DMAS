@@ -7,7 +7,15 @@ import numpy as np
 
 class ModelController:
 
-    def __init__(self, num_agents, num_connections, strategy):
+    def __init__(self, num_agents, num_connections, strategy, call_protocol):
+        """Initialises the controller.
+
+        Arguments:
+        num_agents -- The number of agents that should be in the simulation.
+        num_connections -- The number of maximum connections an agent can make
+            during one time-step.
+        strategy -- The strategy the agents will use.
+        """
         self.num_agents = num_agents
         self.num_connections = num_connections
         self.agents = []
@@ -17,23 +25,39 @@ class ModelController:
         self.paused = False
         self.connections = []
         self.strategy = strategy
+        self.call_protocol = call_protocol
         self.init_agents()
 
     def init_agents(self):
+        """Re-initialises the agents list and fills it with num_agents agents."""
         self.agents = []
         for i in range(self.num_agents):
             self.agents.append(Agent(i, f"Secret {i}", self.strategy, self.num_agents))
 
         self.numpyAgents = np.array(self.agents)
 
-    def update(self, num_agents, num_connections, strategy):
+    def update(self, num_agents, num_connections, strategy, call_protocol):
+        """This function updates the num_agents, num_connections and strategy fields.
+        Then it calls the self.init_agents function so it re-initialises the agents list.
+        
+        Arguments:
+        num_agents -- The number of agents that should be in the simulation.
+        num_connections -- The number of maximum connections an agent can make
+            during one time-step.
+        strategy -- The strategy the agents will use.
+        """
         if not self.started:
+            self.call_protocol = call_protocol
             self.num_agents = num_agents
             self.num_connections = num_connections
             self.strategy = strategy
             self.init_agents()
 
     def start_simulation(self):
+        """Starts the simulation.
+        
+        Outputs the starting messages to stdout and sets the started flag to True.
+        """
         print("Started simulation!")
         print('Strategy = ' +  self.agents[0].strategy)
         for agent in self.agents:
@@ -42,23 +66,35 @@ class ModelController:
         self.started = True
 
     def resume_simulation(self):
+        """Resumes the simulation if it was paused. Sets the paused flag to False."""
         print("Resumed simulation!")
         self.paused = False
 
     def pause_simulation(self):
+        """Pauses the simulation if it was not paused. Sets the paused flag to True."""
         print("Paused simulation!")
         self.paused = True
 
     def stop_simulation(self):
+        """Stops the simulation if it is finished.
+
+        Sets both the started and paused flags to False.
+        """
         self.started = False
         self.paused = False
         print("Stopped simulation!")
 
     def reset_simulation(self):
-        self.__init__(self.num_agents, self.num_connections, self.strategy)
+        """Resets the simulation (there is a button on the UI calling this function).
+        
+        It resets it by calling the self.__init__ function with the current values
+        for num_agents, num_connections and strategy as arguments.
+        """
+        self.__init__(self.num_agents, self.num_connections, self.strategy, self.call_protocol)
         print("Simulation reset!")
 
     def print_agents_secrets(self):
+        """Outputs the number of secrets each agent has learned to stdout."""
         for agent in self.agents:
             print(len(agent.secrets), end='\t')
         print()
@@ -78,6 +114,19 @@ class ModelController:
 
     # TODO: We should refactor this function later
     def exchange_secrets(self):
+        """Exchange secrets between agents in the self.agents list.
+
+        Initialises a set named 'called', which keeps track of which
+        agents have already exchanged secrets this time-step.
+        Then it shuffles the list of agents so each time-step will not
+        start with the same agent. This way is more fair.
+        For each agent in the list of agents, the 'callable' list is computed.
+        This 'callable' list will consist of the list of agents, minus the
+        agents that are not eligible to be called in this time-step (for
+        this particular agent). If the 'callable' list still contains
+        agents after pruning it, a random agent will be chosen from this list
+        to exchange secrets with.
+        """
         called = set()
         shuffled_agents = self.agents.copy()
         self.connections = []  # Connections will store the connections between agents this timestep
@@ -92,9 +141,10 @@ class ModelController:
             # We need to remove the called agents from the callable agents
             callable = self.agents.copy()  # If we are not going for a fully connected graph, we should change this line
             callable.remove(agent)
-            for called_agent in called:
-                if called_agent in callable:
-                    callable.remove(called_agent)
+            if self.call_protocol == 'Standard':
+                for called_agent in called:
+                    if called_agent in callable:
+                        callable.remove(called_agent)
 
             if agent.strategy == 'Token-improved' or agent.strategy == 'Spider-improved':
                 for other_agent in self.agents:
@@ -159,6 +209,9 @@ class ModelController:
                 if connection_agent is None:
                     connection_agent = rn.choice(callable)
 
+                if connection_agent in called:
+                    continue
+
                 # Prevent secrets from stacking during one timestep
                 # (use incoming secrets instead of directly updating secrets)
                 agent.incoming_secrets.update(connection_agent.secrets)
@@ -185,6 +238,14 @@ class ModelController:
             agent.update_secrets()
 
     def simulate_from_ui(self):
+        """If the simulation has started and has not finished yet, this
+        function will perform one time-step of the simulation.
+        
+        It exchanges secrets, prints the number of secrets to stdout,
+        increases the number of time-steps taken and checks whether
+        the simulation has finished during this time-step.
+        The simulation is finished if every agent knows all secrets.
+        """
         if self.started and not self.simulation_finished:
             self.exchange_secrets()
             self.print_agents_secrets()
