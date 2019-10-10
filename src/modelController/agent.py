@@ -20,6 +20,7 @@ class Agent:
         self.has_token = True
         self.secrets_known = np.zeros(num_agents, dtype=int)
         self.called = []
+        self.call_targets = {}
 
     def give_token(self, other_agent):
         """Gives an agent token to another agent.
@@ -46,6 +47,26 @@ class Agent:
         where an agent can only call another agent once.
         """
         self.connections[other.id] = True
+
+    def call_target_solved(self):
+        targets = set()
+        for target_agent in call_targets:
+            solved = True
+            for target_secrets in target_agent:
+                if target_secrets not in self.secrets:
+                    solved = False
+                    break
+            if solved:
+                targets.add(target)
+        return targets
+
+    def target_secrets(self):
+        targets = set()
+        for target_agent in call_targets:
+            for target_secret in target_agent:
+                if target_secret not in self.secrets:
+                    targets.add(target_secret)
+        return targets
 
     def __repr__ (self):
         """This function lets us print out an agent in a nicer format.
