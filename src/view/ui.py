@@ -6,9 +6,9 @@ from dash.dependencies import Input, Output
 import plotly.graph_objs as go
 import math
 
-def run_ui(model_controller, default_num_agents, default_num_connections):
+def run_ui(model_controller, default_num_agents):
     """Runs the Dash UI, which is displayed in a web-browser.
-    
+
     The app layout is defined in app.layout. Dash allows to specify the HTML and CSS
     in pythonic ways, which is done here. There are some callback functions, denoted
     with the @app-callback decorators that change the Dash app in different ways as it
@@ -55,25 +55,12 @@ def run_ui(model_controller, default_num_agents, default_num_connections):
                         ]),
                         html.Div(
                             style={
-                                'padding': '15px 0'
-                            },
-                            children = [
-                            html.Label('Number of connections per agent'),
-                            dcc.Slider(id='num_connections',
-                                min=0,
-                                max=5,
-                                marks={i: str(i) for i in range(0, 6)},
-                                value=1,
-                            )
-                        ]),
-                        html.Div(
-                            style={
                                 'margin-top': '2%'
                             },
                             children=[
                                 html.Button(
                                     children=[
-                                        html.Label("Start simulation")
+                                        html.Label("Start simulation (once)")
                                     ],
                                     id="start_simulation"
                                 ),
@@ -98,7 +85,7 @@ def run_ui(model_controller, default_num_agents, default_num_connections):
                                     {'label': 'Spider', 'value': 'Spider'},
                                     {'label': 'Token (improved)', 'value': 'Token-improved'},
                                     {'label': 'Spider (improved)', 'value': 'Spider-improved'},
-                                    {'label': 'mathematical', 'value': 'mathematical'}
+                                    {'label': 'Mathematical', 'value': 'mathematical'}
                                 ],
                                 value = 'Random'
                             ),
@@ -114,6 +101,26 @@ def run_ui(model_controller, default_num_agents, default_num_connections):
                                 value = 'Standard'
                             ),
                             id="output-protocol"
+                        ),
+                        html.Div(
+                            style={
+                                'margin-top': '2%'
+                            },
+                            children=[
+                            html.Button(
+                                children=[
+                                    html.Label("Start simulations")
+                                    ],
+                                id="start_simulation1"
+                            )],
+                        ),
+                        html.Div(
+                            dcc.Input(
+                                id="number_of_simulations",
+                                type="number",
+                                placeholder="Choose number of simulations"
+                            ),
+                            id="numsim",
                         ),
                         html.Div(html.P(id='timestep')),
                         html.Div(dcc.Graph(id='Graph', animate=False,
@@ -137,13 +144,12 @@ def run_ui(model_controller, default_num_agents, default_num_connections):
         Output('Graph','style'),
         Output('timestep', 'children')],
         [Input('num_nodes','value'),
-        Input('num_connections','value'),
         Input('interval_component','n_intervals'),
         Input('strategy','value'),
         Input('call_protocol','value')])
-    def render_graph(num_nodes, num_connections, n_intervals, strategy, call_protocol):
+    def render_graph(num_nodes, n_intervals, strategy, call_protocol):
         """Creates the nodes-and-edges graph that is displayed in the web-browser.
-        
+
         The decorator specifies which inputs and outputs this function has.
         Whenever one of the inputs changes in the Dash-app, this function is called.
         The inputs are:
@@ -162,7 +168,7 @@ def run_ui(model_controller, default_num_agents, default_num_connections):
         """
 
         # We also need to update the controller
-        model_controller.update(num_nodes, num_connections, strategy, call_protocol)
+        model_controller.update(num_nodes, strategy, call_protocol)
         simulation_finished = model_controller.simulate_from_ui()
 
         # Calculate positions for the nodes of the graph
@@ -272,7 +278,7 @@ def run_ui(model_controller, default_num_agents, default_num_connections):
         [Input(component_id='start_simulation', component_property='n_clicks')])
     def start_simulation(n_clicks):
         """After clicking on the start button, the simulation will be started.
-        
+
         If the simulation has not been started yet, this function will start it.
         If the simulation has started already, and the button is pressed again,
         the simulation will be paused.
@@ -307,7 +313,7 @@ def run_ui(model_controller, default_num_agents, default_num_connections):
         [Input(component_id='reset_simulation', component_property='n_clicks')])
     def reset_simulation(n_clicks):
         """Resets the simulation -- gets triggered by clicking the reset button.
-        
+
         Also resets the n_clicks variable of the start button.
         """
         button_disabled = False
@@ -316,3 +322,13 @@ def run_ui(model_controller, default_num_agents, default_num_connections):
         return button_disabled, None
 
     app.run_server(debug=True)
+
+    @app.callback(
+        [Output(component_id='numsim', component_property='children')],
+        [Input(component_id='start_simulation1', component_property='children'),
+        Input(component_id='number_of_simulations', component_property='value'),
+        Input('num_nodes','value'),
+        Input('strategy','value'),
+        Input('call_protocol','value')])
+    def start_n_simulations(number_of_simulations, num_nodes,strategy,call_protocol):
+        print('1')

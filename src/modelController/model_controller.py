@@ -7,7 +7,7 @@ import numpy as np
 
 class ModelController:
 
-    def __init__(self, num_agents, num_connections, strategy, call_protocol):
+    def __init__(self, num_agents,strategy, call_protocol):
         """Initialises the controller.
 
         Arguments:
@@ -17,7 +17,6 @@ class ModelController:
         strategy -- The strategy the agents will use.
         """
         self.num_agents = num_agents
-        self.num_connections = num_connections
         self.agents = []
         self.timesteps_taken = 0
         self.simulation_finished = False
@@ -36,10 +35,10 @@ class ModelController:
 
         self.numpyAgents = np.array(self.agents)
 
-    def update(self, num_agents, num_connections, strategy, call_protocol):
+    def update(self, num_agents, strategy, call_protocol):
         """This function updates the num_agents, num_connections and strategy fields.
         Then it calls the self.init_agents function so it re-initialises the agents list.
-        
+
         Arguments:
         num_agents -- The number of agents that should be in the simulation.
         num_connections -- The number of maximum connections an agent can make
@@ -49,13 +48,12 @@ class ModelController:
         if not self.started:
             self.call_protocol = call_protocol
             self.num_agents = num_agents
-            self.num_connections = num_connections
             self.strategy = strategy
             self.init_agents()
 
     def start_simulation(self):
         """Starts the simulation.
-        
+
         Outputs the starting messages to stdout and sets the started flag to True.
         """
         print("Started simulation!")
@@ -86,7 +84,7 @@ class ModelController:
 
     def reset_simulation(self):
         """Resets the simulation (there is a button on the UI calling this function).
-        
+
         It resets it by calling the self.__init__ function with the current values
         for num_agents, num_connections and strategy as arguments.
         """
@@ -109,7 +107,7 @@ class ModelController:
     def solve(self, idx, callable):
         if self.find(callable, idx):
             return self.numpyAgents[idx]
-        
+
         return self.solve((idx + 1) % self.num_agents, callable)
 
     # TODO: We should refactor this function later
@@ -137,7 +135,7 @@ class ModelController:
             # If the agent is already in the called set, we skip it
             if agent in called or agent.has_token == False:
                 continue
-                    
+
             # We need to remove the called agents from the callable agents
             callable = self.agents.copy()  # If we are not going for a fully connected graph, we should change this line
             callable.remove(agent)
@@ -169,7 +167,7 @@ class ModelController:
             if len(callable) > 0:
                 rn.shuffle(callable)
                 connection_agent = None
-                
+
                 # idx of agent that is going to be called
                 # agent.id + 1 because we want to do math with indexes > 0. In the end we correct by subtracting 1.
                 # timesteps_taken + 2 because 0 results in idx = 0 every time, and if we would do plus 1, all agents
@@ -177,7 +175,7 @@ class ModelController:
                 if agent.strategy == 'mathematical':
                     idx = (agent.id + 1) * (self.timesteps_taken + 2) - 1
                     connection_agent = self.solve(idx, callable) # get first agent, starting from this id, that is still available
-                    
+
                 if agent.strategy == 'Call-Max-Secrets':
                     max_known = 0
                     for callable_agent in callable:
@@ -240,7 +238,7 @@ class ModelController:
     def simulate_from_ui(self):
         """If the simulation has started and has not finished yet, this
         function will perform one time-step of the simulation.
-        
+
         It exchanges secrets, prints the number of secrets to stdout,
         increases the number of time-steps taken and checks whether
         the simulation has finished during this time-step.
