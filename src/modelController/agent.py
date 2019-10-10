@@ -19,6 +19,7 @@ class Agent:
         self.connections = np.full(num_agents, False)
         self.has_token = True
         self.secrets_known = np.zeros(num_agents, dtype=int)
+        self.called = []
 
     def give_token(self, other_agent):
         """Gives an agent token to another agent.

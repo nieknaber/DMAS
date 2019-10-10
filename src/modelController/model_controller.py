@@ -200,7 +200,7 @@ class ModelController:
                     else:
                         max_known = 0
                         for callable_agent in callable:
-                            if agent.secrets_known[callable_agent.id]>max_known:
+                            if (agent.secrets_known[callable_agent.id]>max_known) and (callable_agent not in agent.called[-5:]):
                                 connection_agent = callable_agent
                                 max_known = agent.secrets_known[callable_agent.id]
 
@@ -218,6 +218,8 @@ class ModelController:
                 called.add(connection_agent)
                 agent.update_secrets_known(connection_agent.secrets_known)
                 connection_agent.update_secrets_known(agent.secrets_known)
+                agent.called.append(connection_agent)
+                connection_agent.called.append(agent)
 
                 if "Token" in agent.strategy:
                     agent.give_token(connection_agent)
