@@ -25,6 +25,7 @@ class ModelController:
         self.connections = []
         self.strategy = strategy
         self.call_protocol = call_protocol
+        self.all_secrets = set()
         self.init_agents()
 
     def init_agents(self):
@@ -32,6 +33,7 @@ class ModelController:
         self.agents = []
         for i in range(self.num_agents):
             self.agents.append(Agent(i, f"Secret {i}", self.strategy, self.num_agents))
+            self.all_secrets.add(f"Secret {i}")
 
         self.numpyAgents = np.array(self.agents)
 
@@ -49,6 +51,7 @@ class ModelController:
             self.call_protocol = call_protocol
             self.num_agents = num_agents
             self.strategy = strategy
+            self.all_secrets = set()
             self.init_agents()
 
     def start_simulation(self):
@@ -204,6 +207,16 @@ class ModelController:
                                 connection_agent = callable_agent
                                 max_known = agent.secrets_known[callable_agent.id]
 
+                if agent.strategy == 'Divide':
+                    for target_agent in agent.call_target_solved():
+                        if target_agent in callable:
+                            connection_agent = target_agent
+                            break
+                    for target_agent in agent.call_targets():
+                        if target_agent in callable:
+                            connection_agent = target_agent
+                            break
+
                 if connection_agent is None:
                     connection_agent = rn.choice(callable)
 
@@ -220,6 +233,28 @@ class ModelController:
                 connection_agent.update_secrets_known(agent.secrets_known)
                 agent.called.append(connection_agent)
                 connection_agent.called.append(agent)
+
+                if agent.strategy == "Divide":
+                    needed_secrets_agent = set()
+                    needed_secrets_connection_agent = set()
+                    overlap = set()
+
+                    for secret_needed in self.all_secrets:
+                        if secret_needed not in agent.secrets:
+                            overlap.add(secret_needed)
+                        elif secret_needed in agent.target_secrets():
+                            if secret_needed in connection_agent.target_secrets():
+                                overlap.add(secret_needed)
+                            else:
+                                needed_secrets_agent.add(secret_needed)
+                        else:
+                            needed_secrets_connection_agent.add(secret_needed)
+
+                    needed_secrets.add(overlap[:len(overlap)//2])
+                    connection_needed_secrets.add(overlap[len(overlap)//2:])
+
+                    agent.call_targets.append({connection_agent: needed_secrets})
+                    connection_agent.call_targets.append({agent: connection_needed_secrets})  
 
                 if "Token" in agent.strategy:
                     agent.give_token(connection_agent)

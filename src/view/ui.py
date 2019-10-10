@@ -83,7 +83,8 @@ def run_ui(model_controller, default_num_agents):
                                     {'label': 'Spider', 'value': 'Spider'},
                                     {'label': 'Token (improved)', 'value': 'Token-improved'},
                                     {'label': 'Spider (improved)', 'value': 'Spider-improved'},
-                                    {'label': 'Mathematical', 'value': 'mathematical'}
+                                    {'label': 'mathematical', 'value': 'mathematical'},
+                                    {'label': 'Divide', 'value': 'divide'}
                                 ],
                                 value = 'Random'
                             ),
