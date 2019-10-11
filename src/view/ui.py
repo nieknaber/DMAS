@@ -6,6 +6,8 @@ from dash.dependencies import Input, Output
 import plotly.graph_objs as go
 import math
 
+from simulations import simulate as sim
+
 def run_ui(model_controller, default_num_agents):
     """Runs the Dash UI, which is displayed in a web-browser.
 
@@ -323,11 +325,12 @@ def run_ui(model_controller, default_num_agents):
     app.run_server(debug=True)
 
     @app.callback(
-        [Output(component_id='numsim', component_property='children')],
-        [Input(component_id='start_simulation1', component_property='children'),
+        [Output(component_id='numsim', component_property='children'),
+        Output(component_id='start_simulation1', component_property='n_clicks')],
+        [Input(component_id='start_simulation1', component_property='n_clicks'),
         Input(component_id='number_of_simulations', component_property='value'),
         Input('num_nodes','value'),
         Input('strategy','value'),
         Input('call_protocol','value')])
     def start_n_simulations(number_of_simulations, num_nodes,strategy,call_protocol):
-        print('1')
+        sim(number_of_simulations,num_nodes, strategy,call_protocol)

@@ -91,7 +91,7 @@ class ModelController:
         It resets it by calling the self.__init__ function with the current values
         for num_agents, num_connections and strategy as arguments.
         """
-        self.__init__(self.num_agents, self.num_connections, self.strategy, self.call_protocol)
+        self.__init__(self.num_agents, self.strategy, self.call_protocol)
         print("Simulation reset!")
 
     def print_agents_secrets(self):
@@ -254,7 +254,7 @@ class ModelController:
                     connection_needed_secrets.add(overlap[len(overlap)//2:])
 
                     agent.call_targets.append({connection_agent: needed_secrets})
-                    connection_agent.call_targets.append({agent: connection_needed_secrets})  
+                    connection_agent.call_targets.append({agent: connection_needed_secrets})
 
                 if "Token" in agent.strategy:
                     agent.give_token(connection_agent)
