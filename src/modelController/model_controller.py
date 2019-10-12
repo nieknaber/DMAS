@@ -173,12 +173,14 @@ class ModelController:
                 connection_agent = None
 
                 if agent.strategy == 'Bubble':
-                    idx = (agent.id % (2 ** (self.timesteps_taken + 1))) + agent.id
-                    print("idx= " + str(idx))
-                    if (idx < self.num_agents) and (idx != agent.id):
-                        connection_agent = self.agents[idx]
-                        print("agent: " + str(agent.id) + " calls: " + str(connection_agent.id))
 
+                    if ((agent.id)%(2 ** (self.timesteps_taken + 1)) <= (2 ** self.timesteps_taken)/2):
+                        idx = agent.id + (2 ** self.timesteps_taken)
+                    else:
+                        idx = agent.id - (2 ** self.timesteps_taken)
+                    if idx < self.num_agents:
+                        connection_agent = self.agents[idx]
+                
                 # idx of agent that is going to be called
                 # agent.id + 1 because we want to do math with indexes > 0. In the end we correct by subtracting 1.
                 # timesteps_taken + 2 because 0 results in idx = 0 every time, and if we would do plus 1, all agents
@@ -226,10 +228,7 @@ class ModelController:
                             break
 
                 if connection_agent is None:
-                    if(agent.strategy != 'Bubble'):
                         connection_agent = rn.choice(callable)
-                    else:
-                        continue
 
                 if connection_agent in called:
                     continue
