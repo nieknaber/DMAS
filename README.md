@@ -9,7 +9,7 @@ After cloning this repository, some dependencies still need to be installed. If 
 Then use the package manager [pip3](https://pip.pypa.io/en/stable/) to install the other dependencies.
 
 ```bash
-pip3 install numpy
+pip3 install pandas
 pip3 install networkx
 pip3 install dash
 ```

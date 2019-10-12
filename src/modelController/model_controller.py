@@ -54,16 +54,19 @@ class ModelController:
             self.all_secrets = set()
             self.init_agents()
 
-    def start_simulation(self):
-        """Starts the simulation.
+    def start_simulation(self, print_message=True):
+        """Starts the simulation. Sets the started flag to True.
 
-        Outputs the starting messages to stdout and sets the started flag to True.
+        Argument:
+        print_message -- If True (which is the default), starting the simulation
+            will also print a message to stdout.
         """
-        print("Started simulation!")
-        print('Strategy = ' +  self.agents[0].strategy)
-        for agent in self.agents:
-            print(agent, end='\t')
-        print()
+        if print_message:
+            print("Started simulation!")
+            print('Strategy = ' +  self.agents[0].strategy)
+            for agent in self.agents:
+                print(agent, end='\t')
+            print()
         self.started = True
 
     def resume_simulation(self):
@@ -85,14 +88,18 @@ class ModelController:
         self.paused = False
         print("Stopped simulation!")
 
-    def reset_simulation(self):
+    def reset_simulation(self, print_message=True):
         """Resets the simulation (there is a button on the UI calling this function).
 
         It resets it by calling the self.__init__ function with the current values
         for num_agents, num_connections and strategy as arguments.
+        Argument:
+        print_message -- IF set to False, the message 'Simulation reset!' will
+            not be printed to stdout
         """
         self.__init__(self.num_agents, self.strategy, self.call_protocol)
-        print("Simulation reset!")
+        if print_message:
+            print("Simulation reset!")
 
     def print_agents_secrets(self):
         """Outputs the number of secrets each agent has learned to stdout."""
@@ -282,7 +289,7 @@ class ModelController:
         for agent in self.agents:
             agent.update_secrets()
 
-    def simulate_from_ui(self):
+    def simulate(self, print_message=True):
         """If the simulation has started and has not finished yet, this
         function will perform one time-step of the simulation.
 
@@ -290,10 +297,16 @@ class ModelController:
         increases the number of time-steps taken and checks whether
         the simulation has finished during this time-step.
         The simulation is finished if every agent knows all secrets.
+
+        If the keyword argument 'print_secrets' is set to False, this function
+        will not print out the secrets of all the agents to stdout. This is useful
+        when doing the simulations without the use of the UI for statistical purposes.
         """
         if self.started and not self.simulation_finished and not self.paused:
             self.exchange_secrets()
-            self.print_agents_secrets()
+            if print_message:
+                self.print_agents_secrets()
+
             self.timesteps_taken += 1
 
             broken_out_of_loop = False
@@ -305,4 +318,5 @@ class ModelController:
 
             if not broken_out_of_loop:
                 self.simulation_finished = True
-                print(f"End of simulation, after {self.timesteps_taken} time-steps.")
+                if print_message:
+                    print(f"End of simulation, after {self.timesteps_taken} time-steps.")

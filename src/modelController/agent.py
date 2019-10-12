@@ -17,10 +17,11 @@ class Agent:
         self.incoming_secrets = set()
         self.strategy = strategy
         self.connections = np.full(num_agents, False)
-        self.has_token = True
         self.secrets_known = np.zeros(num_agents, dtype=int)
         self.called = []
         self.call_targets = {}
+        # If an agent has a token, it can make a call
+        self.has_token = True
 
     def give_token(self, other_agent):
         """Gives an agent token to another agent.

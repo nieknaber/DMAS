@@ -217,10 +217,8 @@ def run_ui(model_controller, default_num_agents):
             Number of time-steps -- The number of time-steps is displayed in a div in
                 the Dash-app
         """
-
-        # We also need to update the controller
         model_controller.update(num_nodes, strategy, call_protocol)
-        simulation_finished = model_controller.simulate_from_ui()
+        simulation_finished = model_controller.simulate()
 
         # Calculate positions for the nodes of the graph
         circle_center = (0, 0)
@@ -329,7 +327,7 @@ def run_ui(model_controller, default_num_agents):
          Output(component_id='call_protocol', component_property='disabled')],
         [Input(component_id='start_simulation', component_property='n_clicks')])
     def start_simulation(n_clicks):
-        """After clicking on the start button, the simulation will be started.
+        """After clicking on the start button in the Dash-app, the simulation will be started.
 
         If the simulation has not been started yet, this function will start it.
         If the simulation has started already, and the button is pressed again,
@@ -378,15 +376,18 @@ def run_ui(model_controller, default_num_agents):
             model_controller.reset_simulation()
         return button_disabled, None
 
-    app.run_server(debug=True)
-
     @app.callback(
-        [Output(component_id='numsim', component_property='children'),
-        Output(component_id='start_simulation1', component_property='n_clicks')],
-        [Input(component_id='start_simulation1', component_property='n_clicks'),
-        Input(component_id='number_of_simulations', component_property='value'),
+        Output('numsim','children'),
+        [Input('start_simulation1', 'n_clicks'),
+        Input('number_of_simulations', 'value'),
         Input('num_nodes','value'),
         Input('strategy','value'),
         Input('call_protocol','value')])
-    def start_n_simulations(number_of_simulations, num_nodes,strategy,call_protocol):
-        sim(number_of_simulations,num_nodes, strategy,call_protocol)
+    def start_n_simulations(n_clicks, number_of_simulations, num_nodes,strategy,call_protocol):
+        # TODO: we moeten even kijken hoe we dit precies willen doen. Vanuit de UI? - Arjan
+        if n_clicks is not None and n_clicks == 1:
+            sim(num_nodes, strategy, call_protocol, number_of_simulations=number_of_simulations)
+
+
+    app.run_server(debug=True)
+
