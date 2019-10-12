@@ -19,123 +19,167 @@ def run_ui(model_controller, default_num_agents):
     """
 
     update_interval = 2000  # 2000 ms = 2 s
-    app = dash.Dash()
 
-    # to add ability to use columns
-    app.css.append_css({'external_url': 'https://codepen.io/chriddyp/pen/bWLwgP.css'})
+    # # to add ability to use columns
+    # app.css.append_css({'external_url': 'https://codepen.io/chriddyp/pen/bWLwgP.css'})
 
-    app.layout = html.Div(
+    # external CSS stylesheets
+    external_stylesheets = [
+        'https://codepen.io/chriddyp/pen/bWLwgP.css',
+        {
+            'href': 'https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css',
+            'rel': 'stylesheet',
+        }
+    ]
+
+    app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+
+
+    # HTML Layout for the Dash-app
+    app.layout = \
+        html.Div(
+            [html.Div(
+                [html.H1(
+                    'Gossip problem',
                     style={
-                        'padding': '30px'
+                        'textAlign': 'center',
+                        'color': 'black'
+                    }
+                ),
+                html.Div(
+                    [html.H3("A web application built for the Design of Multi-Agent Sytems course."),
+                    html.P("This system was built by:"),
+                    html.P("Arjan Jawahier (s2762161), Xabi Krant (s2955156),"
+                             " Roeland Lindhout (s2954524) & Niek Naber (s2515970)")],
+                    style={
+                        'textAlign': 'center',
+                        'color': 'black'
+                    },
+                    className="container"
+                ),
+                html.Div(
+                    style={
+                        'padding': '15px 0'
                     },
                     children = [
-                        html.H1(
-                            children='Gossip problem',
+                        html.Div('Number of agents', style={"textAlign": "center"}),
+                        html.Div(
+                            dcc.Slider(id='num_nodes', 
+                               min=3, 
+                               max=100,
+                               marks={i: str(i) if i%5 == 0 else str("") for i in range(3, 101)},
+                               value=default_num_agents,
+                            ),
                             style={
-                                'textAlign': 'center',
-                                'color': 'black'
+                                "width":"80%",
+                                "margin":"auto"
                             }
-                        ),
-                        html.Div(children=[html.H3("A web application built for the Design of Multi-Agent Sytems course."),
-                            html.Div("This system was built by: Arjan Jawahier (s2762161), Xabi Krant (s2955156), Roeland Lindhout (s2954524) & Niek Naber (s2515970)")],
-                        style={
-                            'textAlign': 'center',
-                            'color': 'black'
-                        }),
-                        html.Div(
-                            style={
-                                'padding': '15px 0'
-                            },
-                            children = [
-                            html.Label('Number of agents'),
-                            dcc.Slider(id='num_nodes',
-                                min=3,
-                                max=100,
-                                marks={i: str(i) if i%5 == 0 else str("") for i in range(3, 101)},
-                                value=default_num_agents,
-                            )
-                        ]),
-                        html.Div(
-                            style={
-                                'margin-top': '2%'
-                            },
-                            children=[
-                                html.Button(
-                                    children=[
-                                        html.Label("Start simulation (once)")
-                                    ],
-                                    id="start_simulation"
-                                ),
-                                html.Button(
-                                    children=[
-                                        html.Label("Reset simulation")
-                                    ],
-                                    id="reset_simulation"
-                                )
-                            ]),
-                        html.Div(
-                            dcc.Dropdown(
-                                id='strategy',
-                                options=[
-                                    {'label': 'Random', 'value': 'Random'},
-                                    {'label': 'Call Me Once', 'value': 'Call-Me-Once'},
-                                    {'label': 'Learn New Secrets', 'value': 'Learn-New-Secrets'},
-                                    {'label': 'Call most useful', 'value': 'Most-useful'},
-                                    {'label': 'Token', 'value': 'Token'},
-                                    {'label': 'Spider', 'value': 'Spider'},
-                                    {'label': 'Token (improved)', 'value': 'Token-improved'},
-                                    {'label': 'Spider (improved)', 'value': 'Spider-improved'},
-                                    {'label': 'mathematical', 'value': 'mathematical'},
-                                    {'label': 'Divide', 'value': 'divide'}
-                                ],
-                                value = 'Random'
-                            ),
-                            id="output-strategy"
-                        ),
-                        html.Div(
-                            dcc.Dropdown(
-                                id='call_protocol',
-                                options=[
-                                    {'label': 'Standard', 'value': 'Standard'},
-                                    {'label': 'Not Standard', 'value': 'Not-Standard'},
-                                ],
-                                value = 'Standard'
-                            ),
-                            id="output-protocol"
-                        ),
-                        html.Div(
-                            style={
-                                'margin-top': '2%'
-                            },
-                            children=[
-                            html.Button(
-                                children=[
-                                    html.Label("Start simulations")
-                                    ],
-                                id="start_simulation1"
-                            )],
-                        ),
-                        html.Div(
-                            dcc.Input(
-                                id="number_of_simulations",
-                                type="number",
-                                placeholder="Choose number of simulations"
-                            ),
-                            id="numsim",
-                        ),
-                        html.Div(html.P(id='timestep')),
-                        html.Div(dcc.Graph(id='Graph', animate=False,
-                            style={
-                                'display': 'none'
-                            }
-                        )),
-                        dcc.Interval(
-                            id='interval_component',
-                            interval=update_interval, #ms
-                            n_intervals=0
                         )
-                    ]
-                )
+                    ]),
+                html.Div(
+                    style={
+                        'margin-top': '2%'
+                    },
+                    children=[
+                        html.Button(
+                            children=[
+                                html.Label("Start simulation (once)")
+                            ],
+                            id="start_simulation"
+                        ),
+                        html.Button(
+                            children=[
+                                html.Label("Reset simulation")
+                            ],
+                            id="reset_simulation"
+                        )
+                    ]),
+                html.Div(
+                    dcc.Dropdown(
+                        id='strategy',
+                        options=[
+                            {'label': 'Random', 'value': 'Random'},
+                            {'label': 'Call Me Once', 'value': 'Call-Me-Once'},
+                            {'label': 'Learn New Secrets', 'value': 'Learn-New-Secrets'},
+                            {'label': 'Call most useful', 'value': 'Most-useful'},
+                            {'label': 'Token', 'value': 'Token'},
+                            {'label': 'Spider', 'value': 'Spider'},
+                            {'label': 'Token (improved)', 'value': 'Token-improved'},
+                            {'label': 'Spider (improved)', 'value': 'Spider-improved'},
+                            {'label': 'mathematical', 'value': 'mathematical'},
+                            {'label': 'Divide', 'value': 'divide'}
+                        ],
+                        value = 'Random'
+                    ),
+                    id="output-strategy"
+                ),
+                html.Div(
+                    dcc.Dropdown(
+                        id='call_protocol',
+                        options=[
+                            {'label': 'Standard', 'value': 'Standard'},
+                            {'label': 'Not Standard', 'value': 'Not-Standard'},
+                        ],
+                        value='Standard'
+                    ),
+                    id="output-protocol"
+                ),
+                html.Div(
+                    style={
+                        'margin-top': '2%'
+                    },
+                    children=[
+                        html.Button(
+                            html.Label("Start simulations"),
+                            id="start_simulation1"
+                        )
+                    ],
+                ),
+                html.Div(
+                    dcc.Input(
+                        id="number_of_simulations",
+                        type="number",
+                        placeholder="Choose number of simulations"
+                    ),
+                    id="numsim",
+                ),
+                html.Div(html.P(id='timestep')),
+                dcc.Interval(
+                    id='interval_component',
+                    interval=update_interval, #ms
+                    n_intervals=0
+                )],
+                className="six columns",
+                style={
+                    'width': "50%",
+                    "float": "left",
+                    "height": "100%" 
+                }
+            ),
+            html.Div(
+                html.Div(
+                    dcc.Graph(
+                        id='Graph',
+                        style={
+                            'display': 'none'
+                        }
+                    )
+                ),
+                className="six columns",
+                style={
+                    "width": "50%",
+                    "float": "left",
+                    "height": "100%" 
+                }
+            )],  
+            style={
+                'padding': '30px',
+                "display": "flex",
+                "height": "100vh" 
+            },
+            className="container",
+            id="grid"
+        )
 
 
     # This has to be such a big function because a Dash output can only have one callback connected to it.
@@ -267,11 +311,9 @@ def run_ui(model_controller, default_num_agents):
             fig.add_trace(line)
 
         style={
-                'height': '800px',
-                'width': '800px'
         }
-
-        return fig, style,  'Time step: ' + str(model_controller.timesteps_taken)
+        # Return the figure, a new empty style for the graph and the number of time steps taken
+        return fig, style, 'Time step: ' + str(model_controller.timesteps_taken)
 
     @app.callback(
         [Output(component_id='start_simulation', component_property='children'),
