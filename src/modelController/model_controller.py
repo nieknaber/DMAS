@@ -133,6 +133,7 @@ class ModelController:
         self.connections = []  # Connections will store the connections between agents this timestep
 
         # We shuffle the agents to fairly determine who goes first
+
         rn.shuffle(shuffled_agents)
         for agent in shuffled_agents:
             # If the agent is already in the called set, we skip it
@@ -170,6 +171,13 @@ class ModelController:
             if len(callable) > 0:
                 rn.shuffle(callable)
                 connection_agent = None
+
+                if agent.strategy == 'Bubble':
+                    idx = (agent.id % (2 ** (self.timesteps_taken + 1))) + agent.id
+                    print("idx= " + str(idx))
+                    if (idx < self.num_agents) and (idx != agent.id):
+                        connection_agent = self.agents[idx]
+                        print("agent: " + str(agent.id) + " calls: " + str(connection_agent.id))
 
                 # idx of agent that is going to be called
                 # agent.id + 1 because we want to do math with indexes > 0. In the end we correct by subtracting 1.
@@ -218,7 +226,10 @@ class ModelController:
                             break
 
                 if connection_agent is None:
-                    connection_agent = rn.choice(callable)
+                    if(agent.strategy != 'Bubble'):
+                        connection_agent = rn.choice(callable)
+                    else:
+                        continue
 
                 if connection_agent in called:
                     continue
