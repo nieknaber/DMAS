@@ -291,7 +291,7 @@ class ModelController:
         the simulation has finished during this time-step.
         The simulation is finished if every agent knows all secrets.
         """
-        if self.started and not self.simulation_finished:
+        if self.started and not self.simulation_finished and not self.paused:
             self.exchange_secrets()
             self.print_agents_secrets()
             self.timesteps_taken += 1

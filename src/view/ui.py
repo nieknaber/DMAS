@@ -53,7 +53,8 @@ def run_ui(model_controller, default_num_agents):
                              " Roeland Lindhout (s2954524) & Niek Naber (s2515970)")],
                     style={
                         'textAlign': 'center',
-                        'color': 'black'
+                        'color': 'black',
+                        'font-size': '1rem'
                     },
                     className="container"
                 ),
@@ -64,40 +65,6 @@ def run_ui(model_controller, default_num_agents):
                     children = [
                         html.Div('Number of agents', style={"textAlign": "center"}),
                         html.Div(
-                            style={
-                                'margin-top': '2%'
-                            },
-                            children=[
-                                html.Button(
-                                    children=[
-                                        html.Label("Start simulation (once)")
-                                    ],
-                                    id="start_simulation"
-                                ),
-                                html.Button(
-                                    children=[
-                                        html.Label("Reset simulation")
-                                    ],
-                                    id="reset_simulation"
-                                )
-                            ]),
-                        html.Div(
-                            dcc.Dropdown(
-                                id='strategy',
-                                options=[
-                                    {'label': 'Random', 'value': 'Random'},
-                                    {'label': 'Call Me Once', 'value': 'Call-Me-Once'},
-                                    {'label': 'Learn New Secrets', 'value': 'Learn-New-Secrets'},
-                                    {'label': 'Call most useful', 'value': 'Most-useful'},
-                                    {'label': 'Token', 'value': 'Token'},
-                                    {'label': 'Spider', 'value': 'Spider'},
-                                    {'label': 'Token (improved)', 'value': 'Token-improved'},
-                                    {'label': 'Spider (improved)', 'value': 'Spider-improved'},
-                                    {'label': 'mathematical', 'value': 'mathematical'},
-                                    {'label': 'Divide', 'value': 'divide'},
-                                    {'label': 'Bubble', 'value': 'Bubble'}
-                                ],
-                                value = 'Random'),
                             dcc.Slider(id='num_nodes', 
                                min=3, 
                                max=100,
@@ -105,19 +72,20 @@ def run_ui(model_controller, default_num_agents):
                                value=default_num_agents,
                             ),
                             style={
-                                "width":"80%",
+                                "width":"90%",
                                 "margin":"auto"
                             }
                         )
                     ]),
                 html.Div(
                     style={
-                        'margin-top': '2%'
+                        'margin-top': '2%',
+                        "display": "flex",
                     },
                     children=[
                         html.Button(
                             children=[
-                                html.Label("Start simulation (once)")
+                                html.Label("Start simulation")
                             ],
                             id="start_simulation"
                         ),
@@ -127,7 +95,9 @@ def run_ui(model_controller, default_num_agents):
                             ],
                             id="reset_simulation"
                         )
-                    ]),
+                    ],
+                    className="container"
+                ),
                 html.Div(
                     dcc.Dropdown(
                         id='strategy',
@@ -143,7 +113,8 @@ def run_ui(model_controller, default_num_agents):
                             {'label': 'mathematical', 'value': 'mathematical'},
                             {'label': 'Divide', 'value': 'divide'}
                         ],
-                        value = 'Random'
+                        value = 'Random',
+                        clearable=False
                     ),
                     id="output-strategy"
                 ),
@@ -154,7 +125,8 @@ def run_ui(model_controller, default_num_agents):
                             {'label': 'Standard', 'value': 'Standard'},
                             {'label': 'Not Standard', 'value': 'Not-Standard'},
                         ],
-                        value='Standard'
+                        value='Standard',
+                        clearable=False
                     ),
                     id="output-protocol"
                 ),
@@ -185,7 +157,6 @@ def run_ui(model_controller, default_num_agents):
                 )],
                 className="six columns",
                 style={
-                    'width': "50%",
                     "float": "left",
                     "height": "100%" 
                 }
@@ -197,11 +168,11 @@ def run_ui(model_controller, default_num_agents):
                         style={
                             'display': 'none'
                         }
-                    )
+                    ),
+                    className="container"
                 ),
                 className="six columns",
                 style={
-                    "width": "50%",
                     "float": "left",
                     "height": "100%" 
                 }
@@ -209,7 +180,8 @@ def run_ui(model_controller, default_num_agents):
             style={
                 'padding': '30px',
                 "display": "flex",
-                "height": "100vh" 
+                "height": "100vh",
+                "font-size":"2.0rem"
             },
             className="container",
             id="grid"
@@ -289,8 +261,8 @@ def run_ui(model_controller, default_num_agents):
             hoverinfo='text',
             marker=dict(
                 showscale=True,
-                colorscale='Magma',
-                reversescale=True,
+                colorscale='Viridis',
+                reversescale=False,
                 color=[],
                 cmax=len(model_controller.agents),
                 cmin=1,
@@ -351,7 +323,10 @@ def run_ui(model_controller, default_num_agents):
 
     @app.callback(
         [Output(component_id='start_simulation', component_property='children'),
-         Output(component_id='start_simulation', component_property='disabled')],
+         Output(component_id='start_simulation', component_property='disabled'),
+         Output(component_id='num_nodes', component_property='disabled'),
+         Output(component_id='strategy', component_property='disabled'),
+         Output(component_id='call_protocol', component_property='disabled')],
         [Input(component_id='start_simulation', component_property='n_clicks')])
     def start_simulation(n_clicks):
         """After clicking on the start button, the simulation will be started.
@@ -366,6 +341,11 @@ def run_ui(model_controller, default_num_agents):
         'Already finished!'.
         """
         button_disabled = False
+        other_disabled = False
+
+        if n_clicks is not None:
+            other_disabled = True
+
         if n_clicks == 1:
             model_controller.start_simulation()
             button_text = "Pause simulation"
@@ -382,7 +362,7 @@ def run_ui(model_controller, default_num_agents):
             else:
                 button_text = "Resume simulation"
                 model_controller.pause_simulation()
-        return button_text, button_disabled
+        return button_text, button_disabled, other_disabled, other_disabled, other_disabled
 
     @app.callback(
         [Output(component_id='reset_simulation', component_property='disabled'),
