@@ -14,11 +14,22 @@ pip3 install networkx
 pip3 install dash
 ```
 
+If you want to run the simulations.py file as well, the matplotlib library is also needed:
+```bash
+pip3 install matplotlib
+````
+
 ## Usage
-To run the program, navigate to the DMAS-Gossip-Problem-B20/src/ directory and run start.py.
+To run the program in the web browser, navigate to the DMAS-Gossip-Problem-B20/src/ directory and run start.py.
 
 ```bash
 python3 start.py
+```
+
+As of now, the simulations done for statistical testing can be done by running simulations.py.
+
+```bash
+python3 simulations.py
 ```
 
 This will cause the Dash app to be running on http://127.0.0.1:8050/.

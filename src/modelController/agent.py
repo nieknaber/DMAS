@@ -19,7 +19,7 @@ class Agent:
         self.connections = np.full(num_agents, False)
         self.secrets_known = np.zeros(num_agents, dtype=int)
         self.called = []
-        self.call_targets = {}
+        self.call_targets = dict()
         # If an agent has a token, it can make a call
         self.has_token = True
 
@@ -38,7 +38,7 @@ class Agent:
         self.secrets_known[self.id] = len(self.secrets)
 
     def update_secrets_known(self, other_agent_secrets_known):
-        for i in range(0, len(self.secrets_known)-1):
+        for i in range(len(self.secrets_known)-1):
             self.secrets_known[i] = max(self.secrets_known[i], other_agent_secrets_known[i])
 
     def store_connections(self, other):
@@ -51,20 +51,20 @@ class Agent:
 
     def call_target_solved(self):
         targets = set()
-        for target_agent in call_targets:
+        for target_agent in self.call_targets:
             solved = True
-            for target_secrets in target_agent:
-                if target_secrets not in self.secrets:
+            for target_secret in target_agent.secrets:
+                if target_secret not in self.secrets:
                     solved = False
                     break
             if solved:
-                targets.add(target)
+                targets.add(target_agent)
         return targets
 
     def target_secrets(self):
         targets = set()
-        for target_agent in call_targets:
-            for target_secret in target_agent:
+        for target_agent in self.call_targets:
+            for target_secret in target_agent.secrets:
                 if target_secret not in self.secrets:
                     targets.add(target_secret)
         return targets

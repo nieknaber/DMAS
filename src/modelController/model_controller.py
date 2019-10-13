@@ -180,7 +180,6 @@ class ModelController:
                 connection_agent = None
 
                 if agent.strategy == 'Bubble':
-
                     if ((agent.id)%(2 ** (self.timesteps_taken + 1)) <= (2 ** self.timesteps_taken)/2):
                         idx = agent.id + (2 ** self.timesteps_taken)
                     else:
@@ -229,7 +228,7 @@ class ModelController:
                         if target_agent in callable:
                             connection_agent = target_agent
                             break
-                    for target_agent in agent.call_targets():
+                    for target_agent in agent.call_targets:
                         if target_agent in callable:
                             connection_agent = target_agent
                             break
@@ -254,24 +253,25 @@ class ModelController:
                 if agent.strategy == "Divide":
                     needed_secrets_agent = set()
                     needed_secrets_connection_agent = set()
-                    overlap = set()
+                    overlap = []
 
                     for secret_needed in self.all_secrets:
                         if secret_needed not in agent.secrets:
-                            overlap.add(secret_needed)
+                            overlap.append(secret_needed)
                         elif secret_needed in agent.target_secrets():
                             if secret_needed in connection_agent.target_secrets():
-                                overlap.add(secret_needed)
+                                overlap.append(secret_needed)
                             else:
                                 needed_secrets_agent.add(secret_needed)
                         else:
                             needed_secrets_connection_agent.add(secret_needed)
 
-                    needed_secrets.add(overlap[:len(overlap)//2])
-                    connection_needed_secrets.add(overlap[len(overlap)//2:])
+                    overlap = tuple(overlap)
+                    needed_secrets_agent.add(overlap[:len(overlap)//2])
+                    needed_secrets_connection_agent.add(overlap[len(overlap)//2:])
 
-                    agent.call_targets.append({connection_agent: needed_secrets})
-                    connection_agent.call_targets.append({agent: connection_needed_secrets})
+                    agent.call_targets.update({connection_agent: needed_secrets_agent})
+                    connection_agent.call_targets.update({agent: needed_secrets_connection_agent})
 
                 if "Token" in agent.strategy:
                     agent.give_token(connection_agent)

@@ -2,22 +2,10 @@ import csv
 import os
 import os.path
 import pandas as pd
+import matplotlib
+import matplotlib.pyplot as plt
 
 from modelController.model_controller import ModelController
-
-# CURRENTLY NOT USED! PANDAS IS BETTER
-# def write_to_csv(num_sim, num_agents, strategy, call_protocol, average_timesteps, filename='data.csv'):
-#     fieldnames = ['Number of Simulations', 'Number of Agents', 'Strategy', 'Call Protocol', 'Average Number of Timesteps']
-#     if os.path.exists(filename) :
-#         with open(filename, 'a') as csvfile:
-#             writer = csv.DictWriter(csvfile,fieldnames=fieldnames)
-#             writer.writerow({'Number of Simulations' : num_sim, 'Number of Agents' : num_agents, 'Strategy' : strategy, 'Call Protocol' : call_protocol, 'Average Number of Timesteps' : average_timesteps })
-
-#     else :
-#         with open(filename, 'w') as csvfile:
-#             writer = csv.DictWriter(csvfile,fieldnames=fieldnames)
-#             writer.writeheader()
-#             writer.writerow({'Number of Simulations' : num_sim, 'Number of Agents' : num_agents, 'Strategy' : strategy, 'Call Protocol' : call_protocol, 'Average Number of Timesteps' : average_timesteps })
 
 def create_df(filepath):
     """Reads or creates a pandas DataFrame."""
@@ -30,7 +18,7 @@ def create_df(filepath):
         df = pd.read_csv(filepath, index_col=0)
     return df
 
-def simulate(num_agents, strategy, call_protocol, num_sim=1000):
+def simulate(num_agents, strategy, call_protocol, df, sims_filepath, num_sim=1000):
     """Perform num_sim simulations of the program with certain values for the parameters.
 
     Input arguments:
@@ -46,11 +34,6 @@ def simulate(num_agents, strategy, call_protocol, num_sim=1000):
     iteration, after which the average and standard deviation of the number of timesteps taken
     can be computed.
     """
-    data_dir = "data"
-    sims_filepath = f"{data_dir}/timesteps_data.csv"
-    if not os.path.isdir(data_dir):
-        os.mkdir(data_dir)
-    df = create_df(sims_filepath)
     new_rows = pd.DataFrame(columns=['Num Simulations', 'Num Agents', 'Strategy', 'Call Protocol', 'Timesteps Taken'])
 
     mc = ModelController(num_agents, strategy, call_protocol)
@@ -87,24 +70,47 @@ def simulate(num_agents, strategy, call_protocol, num_sim=1000):
     std_timesteps = res_df['Timesteps Taken'].std(skipna=True)
     print("Average timesteps taken with these settings: {:.4}".format(average_timesteps))
     print("Standard deviation of timesteps taken with these settings: {:.4}".format(std_timesteps))
+    print()
 
 
-def make_histogram(num_agents, strategy, call_protocol, csv_filename):
-    """This function creates a histogram based on the arguments given.
-
+def make_histogram(num_agents, strategy, call_protocol, df):
+    """This function creates a histogram based 
+    on the arguments given and saves it in the data folder.
+    
     Input arguments:
-    num_agents --
-    strategy --
-    call_protocol --
-    csv_filename --
+    num_agents -- Num agents in the simulation (and graphs)
+    strategy -- Strategy used by agents in the simulation
+    call_protocol -- Call protocol used by agents
+    df -- The DataFrame object
     """
-    pass
+    df = df.loc[(df['Num Agents'] == num_agents) & (df['Strategy'] == strategy) & (df['Call Protocol'] == call_protocol)]
+    num_bins = max(df["Timesteps Taken"]) - min(df["Timesteps Taken"])
+    fig = plt.figure()
+    ax = df["Timesteps Taken"].hist(bins=num_bins, density=1, align='left', histtype='bar', rwidth=0.9)
+    plt.title(f"Strategy: {strategy}, Call Protocol: {call_protocol}, Number of agents: {num_agents}")
+    plt.xlabel(f"Time-steps taken")
+    plt.ylabel(f"Percentage")
+
+    filename = f"data/{strategy}_{call_protocol}_{num_agents}_agents_hist.png"
+    plt.savefig(filename)
+    plt.close(fig)
+
 
 if __name__ == "__main__":
     # Try the simulations for these values of num_agents
-    num_agents_values = [3, 4, 5, 10, 15, 25, 50, 75, 100]
-    strategies = ["Random", "Call-Me-Once", "Learn-New-Secrets"]
+    data_dir = "data"
+    sims_filepath = f"{data_dir}/timesteps_data.csv"
+    if not os.path.isdir(data_dir):
+        os.mkdir(data_dir)
+    df = create_df(sims_filepath)
+
+    num_agents_values = [50, 100, 500]
+    strategies = ["Random", "Call-Me-Once", "Learn-New-Secrets",
+                  "Bubble", "mathematical", "Token-improved",
+                  "Spider-improved", "Call-Max-Secrets", "Call-Min-Secrets",
+                  "Call-Best-Secrets", "Token", "Spider"]
 
     for num_agents in num_agents_values:
         for strategy in strategies:
-            simulate(num_agents, strategy, "Standard")
+            simulate(num_agents, strategy, "Standard", df, sims_filepath)
+            make_histogram(num_agents, strategy, "Standard", df)
