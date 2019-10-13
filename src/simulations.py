@@ -18,7 +18,7 @@ def create_df(filepath):
         df = pd.read_csv(filepath, index_col=0)
     return df
 
-def simulate(num_agents, strategy, call_protocol, df, sims_filepath, num_sim=1000):
+def simulate(num_agents, strategy, call_protocol, sims_filepath, num_sim=1000):
     """Perform num_sim simulations of the program with certain values for the parameters.
 
     Input arguments:
@@ -34,6 +34,7 @@ def simulate(num_agents, strategy, call_protocol, df, sims_filepath, num_sim=100
     iteration, after which the average and standard deviation of the number of timesteps taken
     can be computed.
     """
+    df = create_df(sims_filepath)
     new_rows = pd.DataFrame(columns=['Num Simulations', 'Num Agents', 'Strategy', 'Call Protocol', 'Timesteps Taken'])
 
     mc = ModelController(num_agents, strategy, call_protocol)
@@ -73,7 +74,7 @@ def simulate(num_agents, strategy, call_protocol, df, sims_filepath, num_sim=100
     print()
 
 
-def make_histogram(num_agents, strategy, call_protocol, df):
+def make_histogram(num_agents, strategy, call_protocol, df_filepath):
     """This function creates a histogram based 
     on the arguments given and saves it in the data folder.
     
@@ -81,8 +82,10 @@ def make_histogram(num_agents, strategy, call_protocol, df):
     num_agents -- Num agents in the simulation (and graphs)
     strategy -- Strategy used by agents in the simulation
     call_protocol -- Call protocol used by agents
-    df -- The DataFrame object
+    df_filepath -- The DataFrame object is stored in a csv file.
+        This is the filepath to that csv file.
     """
+    df = pd.read_csv(df_filepath, index_col=0)
     df = df.loc[(df['Num Agents'] == num_agents) & (df['Strategy'] == strategy) & (df['Call Protocol'] == call_protocol)]
     num_bins = max(df["Timesteps Taken"]) - min(df["Timesteps Taken"])
     fig = plt.figure()
@@ -102,15 +105,20 @@ if __name__ == "__main__":
     sims_filepath = f"{data_dir}/timesteps_data.csv"
     if not os.path.isdir(data_dir):
         os.mkdir(data_dir)
-    df = create_df(sims_filepath)
 
-    num_agents_values = [50, 100, 500]
+    # num_agents_values = [10, 50, 100, 500]
+
     strategies = ["Random", "Call-Me-Once", "Learn-New-Secrets",
-                  "Bubble", "mathematical", "Token-improved",
-                  "Spider-improved", "Call-Max-Secrets", "Call-Min-Secrets",
-                  "Call-Best-Secrets", "Token", "Spider"]
+                    "Bubble", "mathematical", "Token-improved",
+                    "Spider-improved", "Call-Max-Secrets", "Call-Min-Secrets",
+                    "Call-Best-Secrets", "Token", "Spider"]
 
-    for num_agents in num_agents_values:
+    for num_agents in [100, 500]:
         for strategy in strategies:
-            simulate(num_agents, strategy, "Standard", df, sims_filepath)
-            make_histogram(num_agents, strategy, "Standard", df)
+            try:
+                simulate(num_agents, strategy, "Standard", sims_filepath)
+                make_histogram(num_agents, strategy, "Standard", sims_filepath)
+            except Exception as e:
+                print(f"Something went wrong during {strategy}")
+                print(e)
+                continue
