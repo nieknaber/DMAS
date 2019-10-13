@@ -1,0 +1,10 @@
+Number of Simulations,Number of Agents,Strategy,Call Protocol,Average Number of Timesteps
+10,25,Random,Standard,1.0
+10,25,Random,Standard,0.7
+10,25,Random,Standard,0.9
+10,25,Random,Standard,0.8
+10,25,Random,Standard,0.9
+10,5,Random,Standard,0.6
+10,5,Random,Standard,5.5
+10,5,Random,Standard,5.7
+1,2,Random,Standard,1.0

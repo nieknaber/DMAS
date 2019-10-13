@@ -1,10 +1,5 @@
 # Gossip Problem - Group B20
 
-## Report
-
-The alpha version of the report can be found in report/Design_of_Multi_Agent_Systems_alphaVersion.pdf
-
-
 This is a project made for the Design of Multi-Agent Systems course given by the University of Groningen. The gossip problem is a problem where each agent starts out with a unique secret, and the goal is for each agent to have all secrets. Each agent can communicate with one other agent during a single time-step. During this time-step, all secrets agent A knows can be given to agent B, and vice versa.
 
 ## Installation
@@ -14,13 +9,18 @@ After cloning this repository, some dependencies still need to be installed. If 
 Then use the package manager [pip3](https://pip.pypa.io/en/stable/) to install the other dependencies.
 
 ```bash
-pip3 install numpy
+pip3 install pandas
 pip3 install networkx
 pip3 install dash
 ```
 
+If you want to run the simulations.py file as well, the matplotlib library is also needed:
+```bash
+pip3 install matplotlib
+````
+
 ## Usage
-To run the program, navigate to the DMAS/src/ directory and run start.py.
+To run the program in the web browser, navigate to the DMAS-Gossip-Problem-B20/src/ directory and run start.py.
 
 ```bash
 python3 start.py
@@ -30,3 +30,12 @@ This will cause the Dash app to be running on http://127.0.0.1:8050/.
 Open up a browser and navigate to that URL or simply click on the link to view the current front-end.
 The current front-end currently consists of some information about the project, 2 sliders that control 2 variables, a button and a graph. 
 To start the simulation, press the "Start simulation" button. The simulation is not yet connected to the front-end, but there is output in the terminal.
+
+
+As of now, the simulations done for statistical testing can be done by running simulations.py.
+
+```bash
+python3 simulations.py
+```
+This program will create a directory named ```data``` and output a csv file with the raw data in there. For different configurations, histograms will also be plotted and saved in the ```data``` folder.
+
