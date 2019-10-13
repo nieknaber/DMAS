@@ -37,3 +37,5 @@ As of now, the simulations done for statistical testing can be done by running s
 ```bash
 python3 simulations.py
 ```
+This program will create a directory named ```data``` and output a csv file with the raw data in there. For different configurations, histograms will also be plotted and saved in the ```data``` folder.
+
