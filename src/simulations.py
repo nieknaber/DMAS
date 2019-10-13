@@ -4,6 +4,7 @@ import os.path
 import pandas as pd
 import matplotlib
 import matplotlib.pyplot as plt
+import sys
 
 from modelController.model_controller import ModelController
 
@@ -101,13 +102,18 @@ def make_histogram(num_agents, strategy, call_protocol, df_filepath):
 
 if __name__ == "__main__":
     # Try the simulations for these values of num_agents
+    if len(sys.argv) != 2:
+        exit("wrong number of arguments, give filename as an argument")
+
+    file_name = sys.argv[1]
+
     data_dir = "data"
-    sims_filepath = f"{data_dir}/timesteps_data.csv"
+    sims_filepath = f"{data_dir}/{file_name}.csv"
     if not os.path.isdir(data_dir):
         os.mkdir(data_dir)
 
-    strategies = ["Call-Min-Secrets",
-                    "Call-Best-Secrets", "Token", "Spider"]
+    num_agents_values = [500]
+    strategies = ["Call-Min-Secrets"]
 
     for num_agents in num_agents_values:
         for strategy in strategies:
