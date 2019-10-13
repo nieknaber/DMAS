@@ -26,13 +26,14 @@ To run the program in the web browser, navigate to the DMAS-Gossip-Problem-B20/s
 python3 start.py
 ```
 
+This will cause the Dash app to be running on http://127.0.0.1:8050/.
+Open up a browser and navigate to that URL or simply click on the link to view the current front-end.
+The current front-end currently consists of some information about the project, 2 sliders that control 2 variables, a button and a graph. 
+To start the simulation, press the "Start simulation" button. The simulation is not yet connected to the front-end, but there is output in the terminal.
+
+
 As of now, the simulations done for statistical testing can be done by running simulations.py.
 
 ```bash
 python3 simulations.py
 ```
-
-This will cause the Dash app to be running on http://127.0.0.1:8050/.
-Open up a browser and navigate to that URL or simply click on the link to view the current front-end.
-The current front-end currently consists of some information about the project, 2 sliders that control 2 variables, a button and a graph. 
-To start the simulation, press the "Start simulation" button. The simulation is not yet connected to the front-end, but there is output in the terminal.
