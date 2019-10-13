@@ -193,7 +193,7 @@ class ModelController:
                 # would try to call themselves in the first time step
                 if agent.strategy == 'mathematical':
                     idx = (agent.id + 1) * (self.timesteps_taken + 2) - 1
-                    connection_agent = self.solve(idx, callable) # get first agent, starting from this id, that is still available
+                    connection_agent = self.solve(idx % self.num_agents, callable) # get first agent, starting from this id, that is still available
 
                 if agent.strategy == 'Call-Max-Secrets':
                     max_known = 0

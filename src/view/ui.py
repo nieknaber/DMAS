@@ -130,30 +130,41 @@ def run_ui(model_controller, default_num_agents):
                     ),
                     id="output-protocol"
                 ),
-                html.Div(
-                    style={
-                        'margin-top': '2%'
-                    },
-                    children=[
-                        html.Button(
-                            html.Label("Start simulations"),
-                            id="start_simulation1"
-                        )
-                    ],
-                ),
-                html.Div(
-                    dcc.Input(
-                        id="number_of_simulations",
-                        type="number",
-                        placeholder="Choose number of simulations"
-                    ),
-                    id="numsim",
-                ),
+                # This commented out code might be used later: start simulation button without intervals
+                # html.Div(
+                #     style={
+                #         'margin-top': '2%'
+                #     },
+                #     children=[
+                #         html.Button(
+                #             html.Label("Start simulations"),
+                #             id="start_simulation1"
+                #         )
+                #     ],
+                # ),
+                # html.Div(
+                #     dcc.Input(
+                #         id="number_of_simulations",
+                #         type="number",
+                #         placeholder="Choose number of simulations"
+                #     ),
+                #     id="numsim",
+                # ),
                 html.Div(html.P(id='timestep')),
                 dcc.Interval(
                     id='interval_component',
                     interval=update_interval, #ms
                     n_intervals=0
+                ),
+                html.Div(
+                    ["Simulation speed",
+                    dcc.Slider(
+                        id='speed_factor', 
+                        min=0.4, 
+                        max=4.0,
+                        step=0.2,
+                        value=1.0,
+                    )]
                 )],
                 className="six columns",
                 style={
@@ -376,17 +387,26 @@ def run_ui(model_controller, default_num_agents):
             model_controller.reset_simulation()
         return button_disabled, None
 
+
     @app.callback(
-        Output('numsim','children'),
-        [Input('start_simulation1', 'n_clicks'),
-        Input('number_of_simulations', 'value'),
-        Input('num_nodes','value'),
-        Input('strategy','value'),
-        Input('call_protocol','value')])
-    def start_n_simulations(n_clicks, number_of_simulations, num_nodes,strategy,call_protocol):
-        # TODO: we moeten even kijken hoe we dit precies willen doen. Vanuit de UI? - Arjan
-        if n_clicks is not None and n_clicks == 1:
-            sim(num_nodes, strategy, call_protocol, number_of_simulations=number_of_simulations)
+        Output('interval_component', 'interval'),
+        [Input('speed_factor', 'value')])
+    def change_speed(speed_factor):
+        new_interval = update_interval / speed_factor
+        return int(new_interval)
+
+    # This commented out block of code might be used later - Arjan
+    # @app.callback(
+    #     Output('numsim','children'),
+    #     [Input('start_simulation1', 'n_clicks'),
+    #     Input('number_of_simulations', 'value'),
+    #     Input('num_nodes','value'),
+    #     Input('strategy','value'),
+    #     Input('call_protocol','value')])
+    # def start_n_simulations(n_clicks, number_of_simulations, num_nodes,strategy,call_protocol):
+    #     # TODO: we moeten even kijken hoe we dit precies willen doen. Vanuit de UI? - Arjan
+    #     if n_clicks is not None and n_clicks == 1:
+    #         sim(num_nodes, strategy, call_protocol, number_of_simulations=number_of_simulations)
 
 
     app.run_server(debug=True)
