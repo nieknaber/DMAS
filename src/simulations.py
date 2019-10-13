@@ -106,14 +106,10 @@ if __name__ == "__main__":
     if not os.path.isdir(data_dir):
         os.mkdir(data_dir)
 
-    # num_agents_values = [10, 50, 100, 500]
-
-    strategies = ["Random", "Call-Me-Once", "Learn-New-Secrets",
-                    "Bubble", "mathematical", "Token-improved",
-                    "Spider-improved", "Call-Max-Secrets", "Call-Min-Secrets",
+    strategies = ["Call-Min-Secrets",
                     "Call-Best-Secrets", "Token", "Spider"]
 
-    for num_agents in [100, 500]:
+    for num_agents in num_agents_values:
         for strategy in strategies:
             try:
                 simulate(num_agents, strategy, "Standard", sims_filepath)
