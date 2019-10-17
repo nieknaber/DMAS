@@ -6,7 +6,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import sys
 
-from modelController.model_controller import ModelController
+from modelController.controller import Controller
 
 def create_df(filepath):
     """Reads or creates a pandas DataFrame."""
@@ -38,7 +38,7 @@ def simulate(num_agents, strategy, call_protocol, sims_filepath, num_sim=1000):
     df = create_df(sims_filepath)
     new_rows = pd.DataFrame(columns=['Num Simulations', 'Num Agents', 'Strategy', 'Call Protocol', 'Timesteps Taken'])
 
-    mc = ModelController(num_agents, strategy, call_protocol)
+    mc = Controller(num_agents, strategy, call_protocol)
     # Start the simulations and record the timesteps taken
 
     total_timesteps_taken = 0

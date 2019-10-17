@@ -6,9 +6,8 @@ from dash.dependencies import Input, Output
 import plotly.graph_objs as go
 import math
 
-from simulations import simulate as sim
 
-def run_ui(model_controller, default_num_agents):
+def run_ui(controller, default_num_agents):
     """Runs the Dash UI, which is displayed in a web-browser.
 
     The app layout is defined in app.layout. Dash allows to specify the HTML and CSS
@@ -110,8 +109,9 @@ def run_ui(model_controller, default_num_agents):
                             {'label': 'Spider', 'value': 'Spider'},
                             {'label': 'Token (improved)', 'value': 'Token-improved'},
                             {'label': 'Spider (improved)', 'value': 'Spider-improved'},
-                            {'label': 'mathematical', 'value': 'mathematical'},
-                            {'label': 'Divide', 'value': 'divide'}
+                            {'label': 'Mathematical', 'value': 'Mathematical'},
+                            {'label': 'Divide', 'value': 'Divide'},
+                            {'label': 'Bubble', 'value': 'Bubble'}
                         ],
                         value = 'Random',
                         clearable=False
@@ -228,8 +228,8 @@ def run_ui(model_controller, default_num_agents):
             Number of time-steps -- The number of time-steps is displayed in a div in
                 the Dash-app
         """
-        model_controller.update(num_nodes, strategy, call_protocol)
-        simulation_finished = model_controller.simulate()
+        controller.update(num_nodes, strategy, call_protocol)
+        simulation_finished = controller.simulate()
 
         # Calculate positions for the nodes of the graph
         circle_center = (0, 0)
@@ -246,13 +246,13 @@ def run_ui(model_controller, default_num_agents):
                 G.add_node(i)
         for node, position in zip(G.nodes, positions.values()):
             G.nodes[node]["pos"] = position
-        pos = nx.get_node_attributes(G,'pos')
+        pos = nx.get_node_attributes(G, 'pos')
 
         # Create Edges
         edge_trace = go.Scatter(
             x=[],
             y=[],
-            line=dict(width=0.5,color='#888'),
+            line=dict(width=0.5, color='#888'),
             hoverinfo='none',
             mode='lines')
 
@@ -273,9 +273,9 @@ def run_ui(model_controller, default_num_agents):
                 colorscale='Viridis',
                 reversescale=False,
                 color=[],
-                cmax=len(model_controller.agents),
+                cmax=len(controller.model.agents),
                 cmin=1,
-                size=100//math.sqrt(num_nodes)+10,
+                size=100 // math.sqrt(num_nodes) + 10,
                 colorbar=dict(
                     thickness=15,
                     title='Secrets known',
@@ -290,7 +290,7 @@ def run_ui(model_controller, default_num_agents):
             node_trace['y'] += tuple([y])
 
         # add color to node points, based on the number of secrets the agents know
-        agents = model_controller.agents
+        agents = controller.model.agents
         for node in G.nodes:
             agent = agents[node]
             num_secrets_known = len(agent.secrets)
@@ -314,7 +314,7 @@ def run_ui(model_controller, default_num_agents):
                     yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)))
 
         # This part adds red edges on the graph to signify which connections have been made
-        additional_edge_traces = model_controller.connections
+        additional_edge_traces = controller.model.connections
         for aet in additional_edge_traces:
             node1, node2 = aet
             x1, y1 = G.nodes[node1]['pos']
@@ -328,7 +328,7 @@ def run_ui(model_controller, default_num_agents):
         style={
         }
         # Return the figure, a new empty style for the graph and the number of time steps taken
-        return fig, style, 'Time step: ' + str(model_controller.timesteps_taken)
+        return fig, style, 'Time step: ' + str(controller.timesteps_taken)
 
     @app.callback(
         [Output(component_id='start_simulation', component_property='children'),
@@ -356,21 +356,21 @@ def run_ui(model_controller, default_num_agents):
             other_disabled = True
 
         if n_clicks == 1:
-            model_controller.start_simulation()
+            controller.start_simulation()
             button_text = "Pause simulation"
         elif n_clicks is not None and n_clicks % 2 == 1:
-            model_controller.resume_simulation()
+            controller.resume_simulation()
             button_text = "Pause simulation"
         elif n_clicks is None:
             button_text = "Start simulation"
         else:
-            if model_controller.simulation_finished:
+            if controller.simulation_finished:
                 print("Simulation has already finished!")
                 button_text = "Already finished!"
                 button_disabled = True
             else:
                 button_text = "Resume simulation"
-                model_controller.pause_simulation()
+                controller.pause_simulation()
         return button_text, button_disabled, other_disabled, other_disabled, other_disabled
 
     @app.callback(
@@ -384,9 +384,8 @@ def run_ui(model_controller, default_num_agents):
         """
         button_disabled = False
         if n_clicks is not None:
-            model_controller.reset_simulation()
+            controller.reset_simulation()
         return button_disabled, None
-
 
     @app.callback(
         Output('interval_component', 'interval'),
@@ -408,6 +407,4 @@ def run_ui(model_controller, default_num_agents):
     #     if n_clicks is not None and n_clicks == 1:
     #         sim(num_nodes, strategy, call_protocol, number_of_simulations=number_of_simulations)
 
-
     app.run_server(debug=True)
-
