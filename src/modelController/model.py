@@ -19,19 +19,6 @@ class Model:
         self.call_protocol = call_protocol
         self.all_secrets = set()
 
-    def find(self, callable, idx):
-        for agent in callable:
-            if agent.id == idx:
-                return True
-
-        return False
-
-    def solve(self, idx, callable):
-        if self.find(callable, idx):
-            return self.numpyAgents[idx]
-
-        return self.solve((idx + 1) % self.num_agents, callable)
-
     def make_callable_set(self, agent_calling, called_agents):
         callable_agents = self.agents.copy()
         callable_agents.remove(agent_calling)
@@ -76,6 +63,88 @@ class Model:
                     callable_agents.remove(other_agent)
         return callable_agents
 
+    def determine_agent(self, agent_calling, callable_agents, timesteps_taken):
+        connection_agent = None
+        if self.strategy == 'Bubble':
+            self.determine_agent_bubble(agent_calling, timesteps_taken)
+        if self.strategy == 'Mathematical':
+            self.determine_agent_math(agent_calling, callable_agents, timesteps_taken)
+        if self.strategy == 'Min-Secrets':
+            self.determine_agent_min_secrets(agent_calling, callable_agents)
+        if self.strategy == 'Max-Secrets':
+            self.determine_agent_max_secrets(agent_calling, callable_agents)
+        if self.strategy == 'Most-useful':
+            self.determine_agent_best_secrets(agent_calling, callable_agents)
+        if self.strategy == 'Divide':
+            self.determine_agent_divide(agent_calling, callable_agents)
+        if connection_agent is None:
+            connection_agent = rn.choice(callable_agents)
+        return connection_agent
+
+    def determine_agent_bubble(self, agent_calling, timesteps_taken):
+        connection_agent = None
+        half_bubble = (2 ** timesteps_taken) / 2
+        next_step = agent_calling.id % (2 ** (timesteps_taken + 1))
+        if next_step <= half_bubble:
+            idx = agent_calling.id + (2 ** timesteps_taken)
+        else:
+            idx = agent_calling.id - (2 ** timesteps_taken)
+        if idx < len(self.agents):
+            connection_agent = self.agents[idx]
+        return connection_agent
+
+        # idx of agent that is going to be called
+        # agent.id + 1 because we want to do math with indexes > 0. In the end we correct by subtracting 1.
+        # timesteps_taken + 2 because 0 results in idx = 0 every time, and if we would do plus 1, all agents
+        # would try to call themselves in the first time step
+    def determine_agent_math(self, agent_calling, callable_agents, timesteps_taken):
+        idx = (agent_calling.id + 1) * (timesteps_taken + 2) - 1
+        # get first agent, starting from this id, that is still available
+        return self.solve(idx % self.num_agents, callable_agents)
+
+    def find(self, callable, idx):
+        for agent in callable:
+            if agent.id == idx:
+                return True
+        return False
+
+    def solve(self, idx, callable):
+        if self.find(callable, idx):
+            return self.numpyAgents[idx]
+        return self.solve((idx + 1) % self.num_agents, callable)
+
+    def determine_agent_min_secrets(self, agent_calling, callable_agents):
+        connection_agent = None
+        min_known = self.num_agents + 1
+        for callable_agent in callable_agents:
+            if agent_calling.secrets_known[callable_agent.id] < min_known:
+                connection_agent = callable_agent
+                min_known = agent_calling.secrets_known[callable_agent.id]
+        return connection_agent
+
+    def determine_agent_max_secrets(self, agent_calling, callable_agents):
+        connection_agent = None
+        max_known = 0
+        for callable_agent in callable_agents:
+            if agent_calling.secrets_known[callable_agent.id] > max_known:
+                connection_agent = callable_agent
+                max_known = agent_calling.secrets_known[callable_agent.id]
+        return connection_agent
+
+    def determine_agent_best_secrets(self, agent_calling, callable_agents):
+        if len(agent_calling.secrets) == self.num_agents:
+            return self.determine_agent_min_secrets(agent_calling, callable_agents)
+        else:
+            return self.determine_agent_max_secrets(agent_calling, callable_agents)
+
+    def determine_agent_divide(self, agent_calling, callable_agents):
+        for target_agent in agent_calling.call_target_solved():
+            if target_agent in callable_agents:
+                return target_agent
+        for target_agent in agent_calling.call_targets:
+            if target_agent in callable_agents:
+                return target_agent
+
     # TODO: We should refactor this function later
     def exchange_secrets(self, timesteps_taken):
         """Exchange secrets between agents in the self.agents list.
@@ -99,73 +168,15 @@ class Model:
         rn.shuffle(shuffled_agents)
         for agent in shuffled_agents:
             # If the agent is already in the called set, we skip it
-            if agent in called or agent.has_token == False:
+            if agent in called or agent.has_token is False:
                 continue
 
-            callable = self.make_callable_set(agent, called)          
+            callable = self.make_callable_set(agent, called)
 
             # Only try to call if there are agents to call
             if len(callable) > 0:
                 rn.shuffle(callable)
-                connection_agent = None
-
-                if self.strategy == 'Bubble':
-                    if ((agent.id) % (2 ** (timesteps_taken + 1)) <= (2 ** timesteps_taken) / 2):
-                        idx = agent.id + (2 ** timesteps_taken)
-                    else:
-                        idx = agent.id - (2 ** timesteps_taken)
-                    if idx < len(self.agents):
-                        connection_agent = self.agents[idx]
-
-                # idx of agent that is going to be called
-                # agent.id + 1 because we want to do math with indexes > 0. In the end we correct by subtracting 1.
-                # timesteps_taken + 2 because 0 results in idx = 0 every time, and if we would do plus 1, all agents
-                # would try to call themselves in the first time step
-                if self.strategy == 'Mathematical':
-                    idx = (agent.id + 1) * (timesteps_taken + 2) - 1
-                    # get first agent, starting from this id, that is still available
-                    connection_agent = self.solve(idx % self.num_agents, callable)  
-
-                if self.strategy == 'Call-Max-Secrets':
-                    max_known = 0
-                    for callable_agent in callable:
-                        if agent.secrets_known[callable_agent.id] > max_known:
-                            connection_agent = callable_agent
-                            max_known = agent.secrets_known[callable_agent.id]
-
-                if self.strategy == 'Call-Min-Secrets':
-                    min_known = self.num_agents + 1
-                    for callable_agent in callable:
-                        if agent.secrets_known[callable_agent.id] < min_known:
-                            connection_agent = callable_agent
-                            min_known = agent.secrets_known[callable_agent.id]
-
-                if self.strategy == 'Call-Best-Secrets':
-                    if len(agent.secrets) == self.num_agents:
-                        min_known = self.num_agents + 1
-                        for callable_agent in callable:
-                            if agent.secrets_known[callable_agent.id] < min_known:
-                                connection_agent = callable_agent
-                                min_known = agent.secrets_known[callable_agent.id]
-                    else:
-                        max_known = 0
-                        for callable_agent in callable:
-                            if (agent.secrets_known[callable_agent.id] > max_known) and (callable_agent not in agent.called[-5:]):
-                                connection_agent = callable_agent
-                                max_known = agent.secrets_known[callable_agent.id]
-
-                if self.strategy == 'Divide':
-                    for target_agent in agent.call_target_solved():
-                        if target_agent in callable:
-                            connection_agent = target_agent
-                            break
-                    for target_agent in agent.call_targets:
-                        if target_agent in callable:
-                            connection_agent = target_agent
-                            break
-
-                if connection_agent is None:
-                        connection_agent = rn.choice(callable)
+                connection_agent = self.determine_agent(agent, callable, timesteps_taken)
 
                 if connection_agent in called:
                     continue

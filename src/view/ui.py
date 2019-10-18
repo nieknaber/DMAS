@@ -105,6 +105,8 @@ def run_ui(controller, default_num_agents):
                             {'label': 'Call Me Once', 'value': 'Call-Me-Once'},
                             {'label': 'Learn New Secrets', 'value': 'Learn-New-Secrets'},
                             {'label': 'Call most useful', 'value': 'Most-useful'},
+                            {'label': 'Call least secrets', 'value': 'Min-Secrets'},
+                            {'label': 'Call most secrets', 'value': 'Max-Secrets'},
                             {'label': 'Token', 'value': 'Token'},
                             {'label': 'Spider', 'value': 'Spider'},
                             {'label': 'Token (improved)', 'value': 'Token-improved'},
