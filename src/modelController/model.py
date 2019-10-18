@@ -145,7 +145,50 @@ class Model:
             if target_agent in callable_agents:
                 return target_agent
 
-    # TODO: We should refactor this function later
+    def add_called_agents(self, agent_calling, connection_agent, called_agents):
+        called_agents.add(agent_calling)
+        called_agents.add(connection_agent)
+        agent_calling.called.append(connection_agent)
+        connection_agent.called.append(agent_calling)
+        return called_agents
+
+    def agents_interact(self, agent_calling, connection_agent):
+        # Prevent secrets from stacking during one timestep
+        # (use incoming secrets instead of directly updating secrets)
+        agent_calling.incoming_secrets.update(connection_agent.secrets)
+        connection_agent.incoming_secrets.update(agent_calling.secrets)
+        agent_calling.update_secrets_known(connection_agent.secrets_known)
+        connection_agent.update_secrets_known(agent_calling.secrets_known)
+        if self.strategy == 'Divide':
+            self.interact_divide()
+        if "Token" in self.strategy:
+            agent_calling.give_token(connection_agent)
+        if "Spider" in self.strategy:
+            connection_agent.give_token(agent_calling)
+
+    def interact_divide(self, agent_calling, connection_agent):
+        needed_secrets_agent = set()
+        needed_secrets_connection_agent = set()
+        overlap = []
+
+        for secret_needed in self.all_secrets:
+            if secret_needed not in agent_calling.secrets:
+                overlap.append(secret_needed)
+            elif secret_needed in agent_calling.target_secrets():
+                if secret_needed in connection_agent.target_secrets():
+                    overlap.append(secret_needed)
+                else:
+                    needed_secrets_agent.add(secret_needed)
+            else:
+                needed_secrets_connection_agent.add(secret_needed)
+
+        overlap = tuple(overlap)
+        needed_secrets_agent.add(overlap[:len(overlap) // 2])
+        needed_secrets_connection_agent.add(overlap[len(overlap) // 2:])
+
+        agent_calling.call_targets.update({connection_agent: needed_secrets_agent})
+        connection_agent.call_targets.update({agent_calling: needed_secrets_connection_agent})
+
     def exchange_secrets(self, timesteps_taken):
         """Exchange secrets between agents in the self.agents list.
 
@@ -161,7 +204,8 @@ class Model:
         to exchange secrets with.
         """
         shuffled_agents = self.agents.copy()
-        self.connections = []  # Connections will store the connections between agents this timestep
+        # Connections will store the connections between agents this timestep
+        self.connections = []
         called = set()
         # We shuffle the agents to fairly determine who goes first
 
@@ -181,51 +225,16 @@ class Model:
                 if connection_agent in called:
                     continue
 
-                # Prevent secrets from stacking during one timestep
-                # (use incoming secrets instead of directly updating secrets)
-                agent.incoming_secrets.update(connection_agent.secrets)
-                connection_agent.incoming_secrets.update(agent.secrets)
-                called.add(agent)
-                called.add(connection_agent)
-                agent.update_secrets_known(connection_agent.secrets_known)
-                connection_agent.update_secrets_known(agent.secrets_known)
-                agent.called.append(connection_agent)
-                connection_agent.called.append(agent)
+                called = self.add_called_agents(agent, connection_agent, called)
+                self.agents_interact(agent, connection_agent)
 
-                if self.strategy == 'Divide':
-                    needed_secrets_agent = set()
-                    needed_secrets_connection_agent = set()
-                    overlap = []
-
-                    for secret_needed in self.all_secrets:
-                        if secret_needed not in agent.secrets:
-                            overlap.append(secret_needed)
-                        elif secret_needed in agent.target_secrets():
-                            if secret_needed in connection_agent.target_secrets():
-                                overlap.append(secret_needed)
-                            else:
-                                needed_secrets_agent.add(secret_needed)
-                        else:
-                            needed_secrets_connection_agent.add(secret_needed)
-
-                    overlap = tuple(overlap)
-                    needed_secrets_agent.add(overlap[:len(overlap) // 2])
-                    needed_secrets_connection_agent.add(overlap[len(overlap) // 2:])
-
-                    agent.call_targets.update({connection_agent: needed_secrets_agent})
-                    connection_agent.call_targets.update({agent: needed_secrets_connection_agent})
-
-                if "Token" in self.strategy:
-                    agent.give_token(connection_agent)
-
-                if "Spider" in self.strategy:
-                    connection_agent.give_token(agent)
-
-                # The connection is stored for both agents, so they wont call each other again if the strategy is CMO
+                # The connection is stored for both agents,
+                # so they wont call each other again if the strategy is CMO
                 agent.store_connections(connection_agent)
                 connection_agent.store_connections(agent)
 
-                # Add the connection in the controller, so we can highlight it in the UI
+                # Add the connection in the controller,
+                # so we can highlight it in the UI
                 self.connections.append((min(agent.id, connection_agent.id), max(agent.id, connection_agent.id)))
 
         for agent in self.agents:

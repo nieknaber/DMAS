@@ -132,26 +132,6 @@ def run_ui(controller, default_num_agents):
                     ),
                     id="output-protocol"
                 ),
-                # This commented out code might be used later: start simulation button without intervals
-                # html.Div(
-                #     style={
-                #         'margin-top': '2%'
-                #     },
-                #     children=[
-                #         html.Button(
-                #             html.Label("Start simulations"),
-                #             id="start_simulation1"
-                #         )
-                #     ],
-                # ),
-                # html.Div(
-                #     dcc.Input(
-                #         id="number_of_simulations",
-                #         type="number",
-                #         placeholder="Choose number of simulations"
-                #     ),
-                #     id="numsim",
-                # ),
                 html.Div(html.P(id='timestep')),
                 dcc.Interval(
                     id='interval_component',
@@ -171,7 +151,7 @@ def run_ui(controller, default_num_agents):
                 className="six columns",
                 style={
                     "float": "left",
-                    "height": "100%" 
+                    "height": "100%"
                 }
             ),
             html.Div(
