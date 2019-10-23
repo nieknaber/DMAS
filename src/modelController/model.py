@@ -24,8 +24,9 @@ class Model:
         callable_agents.remove(agent_calling)
         if self.call_protocol == 'Standard':
             return self.remove_agents_calling(callable_agents, called_agents)
-        if self.strategy == 'Token-improved' or self.strategy == 'Spider-improved':
-            return self.remove_completed_agents(callable_agents, agent_calling)
+        # TODO: Either remove or improve/change this strategy
+        # if self.strategy == 'Token-improved' or self.strategy == 'Spider-improved':
+        #     return self.remove_completed_agents(callable_agents, agent_calling)
         if self.strategy == 'Call-Me-Once':
             return self.remove_called_agents(callable_agents, agent_calling)
         if self.strategy == 'Learn-New-Secrets':
@@ -53,12 +54,11 @@ class Model:
                 callable_agents.remove(connected_agent)
         return callable_agents
 
-    # TODO: Remove this function or change it so that it is distributed
     # Learn new secrets strategy
     def remove_agents_same_secrets(self, callable_agents, agent_calling):
         # If an agent has the same set of secrets as this agent, it is removed from the callable list
         for other_agent in self.agents:
-            if other_agent.secrets == agent_calling.secrets:
+            if f"Secret {other_agent.id}" in agent_calling.secrets:
                 if other_agent in callable_agents:
                     callable_agents.remove(other_agent)
         return callable_agents
@@ -68,7 +68,8 @@ class Model:
         if self.strategy == 'Bubble':
             self.determine_agent_bubble(agent_calling, timesteps_taken)
         elif self.strategy == 'Mathematical':
-            self.determine_agent_math(agent_calling, callable_agents, timesteps_taken)
+            self.determine_agent_math(
+                agent_calling, callable_agents, timesteps_taken)
         elif self.strategy == 'Min-Secrets':
             self.determine_agent_min_secrets(agent_calling, callable_agents)
         elif self.strategy == 'Max-Secrets':
@@ -185,8 +186,10 @@ class Model:
         needed_secrets_agent.add(overlap[:len(overlap) // 2])
         needed_secrets_connection_agent.add(overlap[len(overlap) // 2:])
 
-        agent_calling.call_targets.update({connection_agent: needed_secrets_agent})
-        connection_agent.call_targets.update({agent_calling: needed_secrets_connection_agent})
+        agent_calling.call_targets.update(
+            {connection_agent: needed_secrets_agent})
+        connection_agent.call_targets.update(
+            {agent_calling: needed_secrets_connection_agent})
 
     def exchange_secrets(self, timesteps_taken):
         """Exchange secrets between agents in the self.agents list.
@@ -219,12 +222,14 @@ class Model:
             # Only try to call if there are agents to call
             if len(callable) > 0:
                 rn.shuffle(callable)
-                connection_agent = self.determine_agent(agent, callable, timesteps_taken)
+                connection_agent = self.determine_agent(
+                    agent, callable, timesteps_taken)
 
                 if connection_agent in called:
                     continue
 
-                called = self.add_called_agents(agent, connection_agent, called)
+                called = self.add_called_agents(
+                    agent, connection_agent, called)
                 self.agents_interact(agent, connection_agent)
 
                 # The connection is stored for both agents,
@@ -234,7 +239,8 @@ class Model:
 
                 # Add the connection in the controller,
                 # so we can highlight it in the UI
-                self.connections.append((min(agent.id, connection_agent.id), max(agent.id, connection_agent.id)))
+                self.connections.append(
+                    (min(agent.id, connection_agent.id), max(agent.id, connection_agent.id)))
 
         for agent in self.agents:
             agent.update_secrets()

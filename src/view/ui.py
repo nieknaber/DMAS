@@ -141,8 +141,8 @@ def run_ui(controller, default_num_agents):
                 html.Div(
                     ["Simulation speed",
                     dcc.Slider(
-                        id='speed_factor', 
-                        min=0.4, 
+                        id='speed_factor',
+                        min=0.4,
                         max=4.0,
                         step=0.2,
                         value=1.0,
@@ -167,14 +167,14 @@ def run_ui(controller, default_num_agents):
                 className="six columns",
                 style={
                     "float": "left",
-                    "height": "100%" 
+                    "height": "100%"
                 }
-            )],  
+            )],
             style={
                 'padding': '30px',
                 "display": "flex",
                 "height": "100vh",
-                "font-size":"2.0rem"
+                "font-size": "2.0rem"
             },
             className="container",
             id="grid"
