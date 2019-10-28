@@ -160,7 +160,7 @@ class Model:
         agent_calling.update_secrets_known(connection_agent.secrets_known)
         connection_agent.update_secrets_known(agent_calling.secrets_known)
         if self.strategy == 'Divide':
-            self.interact_divide()
+            self.interact_divide(agent_calling, connection_agent)
         if "Token" in self.strategy:
             agent_calling.give_token(connection_agent)
         if "Spider" in self.strategy:
