@@ -1,5 +1,5 @@
 """
-The app layout is defined in app.layout. Dash allows to specify the HTML and CSS
+The app layout is defined in layout.py. Dash allows to specify the HTML and CSS
 in pythonic ways, which is done here. There are some callback functions, denoted
 with the @app-callback decorators that change the Dash app in different ways as it
 is running. Most callbacks are called when the user interacts with the UI. The
@@ -8,11 +8,11 @@ render_graph callback is also called every 'update_interval'.
 
 import networkx as nx
 import dash
-import dash_html_components as html
-import dash_core_components as dcc
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
 import math
+from simulations import simulate_generator, make_histogram_for_frontend
+import view.layout as layout
 
 # external CSS stylesheets
 external_stylesheets = [
@@ -28,162 +28,30 @@ update_interval = 2000  # 2000 ms = 2 s
 default_num_agents = 10
 
 # HTML Layout for the Dash-app
-app.layout = \
-    html.Div(
-        [html.Div(
-            [html.H1(
-                'Gossip problem',
-                style={
-                    'textAlign': 'center',
-                    'color': 'black'
-                }
-            ),
-            html.Div(
-                [html.H3("A web application built for the Design of Multi-Agent Sytems course."),
-                html.P("This system was built by:"),
-                html.P("Arjan Jawahier (s2762161), Xabi Krant (s2955156),"
-                         " Roeland Lindhout (s2954524) & Niek Naber (s2515970)")],
-                style={
-                    'textAlign': 'center',
-                    'color': 'black',
-                    'font-size': '1rem'
-                },
-                className="container"
-            ),
-            html.Div(
-                style={
-                    'padding': '15px 0'
-                },
-                children = [
-                    html.Div('Number of agents', style={"textAlign": "center"}),
-                    html.Div(
-                        dcc.Slider(id='num_nodes', 
-                           min=3, 
-                           max=100,
-                           marks={i: str(i) if i%5 == 0 else str("") for i in range(3, 101)},
-                           value=default_num_agents,
-                        ),
-                        style={
-                            "width":"90%",
-                            "margin":"auto"
-                        }
-                    )
-                ]),
-            html.Div(
-                style={
-                    'margin-top': '2%',
-                    "display": "flex",
-                },
-                children=[
-                    html.Button(
-                        children=[
-                            html.Label("Start simulation")
-                        ],
-                        id="start_simulation"
-                    ),
-                    html.Button(
-                        children=[
-                            html.Label("Reset simulation")
-                        ],
-                        id="reset_simulation"
-                    )
-                ],
-                className="container"
-            ),
-            html.Div(
-                dcc.Dropdown(
-                    id='strategy',
-                    options=[
-                        {'label': 'Random', 'value': 'Random'},
-                        {'label': 'Call Me Once', 'value': 'Call-Me-Once'},
-                        {'label': 'Learn New Secrets', 'value': 'Learn-New-Secrets'},
-                        {'label': 'Call most useful', 'value': 'Most-useful'},
-                        {'label': 'Call least secrets', 'value': 'Min-Secrets'},
-                        {'label': 'Call most secrets', 'value': 'Max-Secrets'},
-                        {'label': 'Token', 'value': 'Token'},
-                        {'label': 'Spider', 'value': 'Spider'},
-                        {'label': 'Token (improved)', 'value': 'Token-improved'},
-                        {'label': 'Spider (improved)', 'value': 'Spider-improved'},
-                        {'label': 'Mathematical', 'value': 'Mathematical'},
-                        {'label': 'Divide', 'value': 'Divide'},
-                        {'label': 'Bubble', 'value': 'Bubble'}
-                    ],
-                    value = 'Random',
-                    clearable=False
-                ),
-                id="output-strategy"
-            ),
-            html.Div(
-                dcc.Dropdown(
-                    id='call_protocol',
-                    options=[
-                        {'label': 'Standard', 'value': 'Standard'},
-                        {'label': 'Not Standard', 'value': 'Not-Standard'},
-                    ],
-                    value='Standard',
-                    clearable=False
-                ),
-                id="output-protocol"
-            ),
-            html.Div(html.P(id='timestep')),
-            dcc.Interval(
-                id='interval_component',
-                interval=update_interval, #ms
-                n_intervals=0
-            ),
-            html.Div(
-                ["Simulation speed",
-                dcc.Slider(
-                    id='speed_factor',
-                    min=0.4,
-                    max=4.0,
-                    step=0.2,
-                    value=1.0,
-                )]
-            )],
-            className="six columns",
-            style={
-                "float": "left",
-                "height": "100%"
-            }
-        ),
-        html.Div(
-            html.Div(
-                dcc.Graph(
-                    id='Graph',
-                    style={
-                        'display': 'none'
-                    }
-                ),
-                className="container"
-            ),
-            className="six columns",
-            style={
-                "float": "left",
-                "height": "100%"
-            }
-        )],
-        style={
-            'padding': '30px',
-            "display": "flex",
-            "height": "100vh",
-            "font-size": "2.0rem"
-        },
-        className="container",
-        id="grid"
-    )
-
+app.layout = layout.layout(default_num_agents, update_interval)
+    
 # Global variables used in render_graph, this has to be used since an output can only have 1 callback
 # But we need to save the states
 num_nodes_state = 0
 base_figure = go.Figure()
 G = nx.Graph()
+computing_histogram = False
+generator = None
+num_sims = 1000
+timesteps_counter = {}                  
+
+def run_ui(ctrl, def_num_agents):
+    """Runs the Dash UI, which is displayed in a web-browser."""
+    global controller
+    global default_num_agents
+    controller = ctrl
+    default_num_agents = def_num_agents
+    app.run_server(debug=True)
 
 # This has to be such a big function because a Dash output can only have one callback connected to it.
 # And since we want to update the graph with most of what we do, we have to put all that logic in this function.
 @app.callback(
     [Output('Graph','figure'),
-    Output('Graph','style'),
     Output('timestep', 'children')],
     [Input('num_nodes','value'),
     Input('interval_component','n_intervals'),
@@ -328,28 +196,80 @@ def render_graph(num_nodes, n_intervals, strategy, call_protocol):
                           line=go.scatter.Line(color='red'))
         fig.add_trace(line)
 
-    style={
-    }
-    # Return the figure, a new empty style for the graph and the number of time steps taken
-    return fig, style, 'Time step: ' + str(controller.timesteps_taken)
+    # Return the figure and the number of time steps taken
+    return fig, 'Time step: ' + str(controller.timesteps_taken)
 
-def run_ui(ctrl, def_num_agents):
-    """Runs the Dash UI, which is displayed in a web-browser."""
-    global controller
-    global default_num_agents
-    controller = ctrl
-    default_num_agents = def_num_agents
-    app.run_server(debug=True)
+@app.callback(
+    Output('start_simulation', 'disabled'),
+    [Input('start_simulation', 'n_clicks'),
+    Input("comp_hist", "n_clicks")])
+def disable_start_button(start_clicks, comp_clicks):
+    """Disables the start button, based on any input that needs to block the start button"""
+    if start_clicks is not None or comp_clicks is not None:
+        return True
+    else:
+        return False
+
+@app.callback(
+    Output('num_nodes', 'disabled'),
+    [Input('start_simulation', 'n_clicks'),
+    Input("comp_hist", "n_clicks")])
+def disable_num_nodes_slider(start_clicks, comp_clicks):
+    """Disables the num_nodes slider, based on any input that needs to block it"""
+    if start_clicks is not None or comp_clicks is not None:
+        return True
+    else:
+        return False
+
+@app.callback(
+    Output('strategy', 'disabled'),
+    [Input('start_simulation', 'n_clicks'),
+    Input("comp_hist", "n_clicks")])
+def disable_num_nodes_slider(start_clicks, comp_clicks):
+    """Disables the strategy menu, based on any input that needs to block it"""
+    if start_clicks is not None or comp_clicks is not None:
+        return True
+    else:
+        return False
+
+@app.callback(
+    Output('call_protocol', 'disabled'),
+    [Input('start_simulation', 'n_clicks'),
+    Input("comp_hist", "n_clicks")])
+def disable_num_nodes_slider(start_clicks, comp_clicks):
+    """Disables the call protocol menu, based on any input that needs to block it"""
+    if start_clicks is not None or comp_clicks is not None:
+        return True
+    else:
+        return False
+
+@app.callback(
+    Output('comp_hist', 'disabled'),
+    [Input('start_simulation', 'n_clicks'),
+    Input("comp_hist", "n_clicks")])
+def disable_num_nodes_slider(start_clicks, comp_clicks):
+    """Disables the call protocol menu, based on any input that needs to block it"""
+    if start_clicks is not None or comp_clicks is not None:
+        return True
+    else:
+        return False
+
+@app.callback(
+    Output('show_hist', 'options'),
+    [Input('start_simulation', 'n_clicks'),
+    Input("comp_hist", "n_clicks")])
+def disable_num_nodes_slider(start_clicks, comp_clicks):
+    """Disables the show histogram checkbox, based on any input that needs to block it"""
+    if start_clicks is not None:
+        return [{'label': 'Show histogram', 'value': 'SH', 'disabled': True}]
+    else:
+        return [{'label': 'Show histogram', 'value': 'SH', 'disabled': False}]
 
 
 @app.callback(
-    [Output(component_id='start_simulation', component_property='children'),
-     Output(component_id='start_simulation', component_property='disabled'),
-     Output(component_id='num_nodes', component_property='disabled'),
-     Output(component_id='strategy', component_property='disabled'),
-     Output(component_id='call_protocol', component_property='disabled')],
-    [Input(component_id='start_simulation', component_property='n_clicks')])
-def start_simulation(n_clicks):
+    Output('start_simulation', 'children'),
+    [Input('start_simulation', 'n_clicks')])
+def start_simulation(start_clicks):
     """After clicking on the start button in the Dash-app, the simulation will be started.
 
     If the simulation has not been started yet, this function will start it.
@@ -361,43 +281,39 @@ def start_simulation(n_clicks):
     the button will be disabled (grayed out) and display the text:
     'Already finished!'.
     """
-    button_disabled = False
-    other_disabled = False
-
-    if n_clicks is not None:
-        other_disabled = True
-
-    if n_clicks == 1:
+    if start_clicks == 1:
         controller.start_simulation()
         button_text = "Pause simulation"
-    elif n_clicks is not None and n_clicks % 2 == 1:
+    elif start_clicks is not None and start_clicks % 2 == 1:
         controller.resume_simulation()
         button_text = "Pause simulation"
-    elif n_clicks is None:
+    elif start_clicks is None:
         button_text = "Start simulation"
     else:
         if controller.simulation_finished:
-            print("Simulation has already finished!")
             button_text = "Already finished!"
-            button_disabled = True
         else:
             button_text = "Resume simulation"
             controller.pause_simulation()
-    return button_text, button_disabled, other_disabled, other_disabled, other_disabled
+    return button_text
 
 @app.callback(
-    [Output(component_id='reset_simulation', component_property='disabled'),
-    Output(component_id='start_simulation', component_property='n_clicks')],
-    [Input(component_id='reset_simulation', component_property='n_clicks')])
+    [Output('start_simulation', 'n_clicks'),
+    Output('progress_interval', 'n_intervals'),
+    Output('comp_hist', 'n_clicks')],
+    [Input('reset_simulation', 'n_clicks')])
 def reset_simulation(n_clicks):
     """Resets the simulation -- gets triggered by clicking the reset button.
 
-    Also resets the n_clicks variable of the start button.
+    Also resets the n_clicks variable of the start button and comp hist button.
+    This in turn resets a lot of the disabled buttons and other HTML elements.
     """
-    button_disabled = False
+    global computing_histogram
+    computing_histogram = False
+
     if n_clicks is not None:
         controller.reset_simulation()
-    return button_disabled, None
+    return None, 0, None
 
 @app.callback(
     Output('interval_component', 'interval'),
@@ -406,17 +322,89 @@ def change_speed(speed_factor):
     new_interval = update_interval / speed_factor
     return int(new_interval)
 
-# This commented out block of code might be used later - Arjan
-# @app.callback(
-#     Output('numsim','children'),
-#     [Input('start_simulation1', 'n_clicks'),
-#     Input('number_of_simulations', 'value'),
-#     Input('num_nodes','value'),
-#     Input('strategy','value'),
-#     Input('call_protocol','value')])
-# def start_n_simulations(n_clicks, number_of_simulations, num_nodes,strategy,call_protocol):
-#     # TODO: we moeten even kijken hoe we dit precies willen doen. Vanuit de UI? - Arjan
-#     if n_clicks is not None and n_clicks == 1:
-#         sim(num_nodes, strategy, call_protocol, number_of_simulations=number_of_simulations)
 
-    
+@app.callback(
+    [Output('Graph', 'style'),
+    Output('Hist', 'style')],
+    [Input('show_hist', 'value')])
+def show_histogram(show_hist):
+    if show_hist:
+        graph_style = {"display":"none"}
+        hist_style = {"display":"block"}
+    else:
+        graph_style = {"display":"block"}
+        hist_style = {"display":"none"}
+    return graph_style, hist_style
+
+@app.callback(
+    [Output('comp_hist', 'children'),
+    Output('progress_interval', 'max_intervals')],
+    [Input('comp_hist', 'n_clicks'),
+    Input('num_nodes','value'),
+    Input('strategy','value'),
+    Input('call_protocol','value')])
+def compute_histogram(n_clicks, num_nodes, strategy, call_protocol):
+    if n_clicks is not None:
+        global computing_histogram
+        global generator
+        global num_sims
+        num_sims = 1000
+        computing_histogram = True
+        generator = simulate_generator(num_nodes, strategy, call_protocol, num_sim=num_sims)
+        t = next(generator)
+        return "Computing...", num_sims
+    return "Compute Histogram", 0
+
+@app.callback(
+    [Output('progress_bar', 'children'),
+    Output('progress_bar', 'style'),
+    Output('comp_hist', 'style'),
+    Output('Hist', 'figure')],
+    [Input('progress_interval', 'n_intervals')],
+    [State('Hist', 'figure')])
+def update_progress_bar(n_intervals, old_fig):
+    global computing_histogram
+    global generator
+    global num_sims
+    global timesteps_counter
+
+    hist = old_fig
+    if computing_histogram:
+        try:
+            timesteps_counter = next(generator)
+        except StopIteration:
+            computing_histogram = False
+
+    # Only make a histogram every 3 intervals (or when the end is reached,
+    # otherwise it starts to lag hard
+    if n_intervals % 3 == 0 or not computing_histogram:
+        hist = make_histogram_for_frontend(timesteps_counter)
+
+    prog_bar_width = 100*n_intervals/num_sims
+    comp_hist_width = 100 - prog_bar_width
+    prog_bar_style = {
+        "width":f"{prog_bar_width}%",
+        "min-width":"0.1%",
+        "font-size":"2rem",
+        "position":"relative",
+        "background":"rgb(0,200,0)",
+        "height":"100%",
+        "padding":0,
+        "margin":0,
+        "border":0,
+    }
+    comp_hist_style = {
+        "width":f"{comp_hist_width}%",
+        "min-width":"0.1%",
+        "font-size":"2rem",
+        "position":"relative",
+        "background":"rgb(255,255,255)",
+        "height":"100%",
+        "padding":0,
+        "margin":0,
+        "border":0,
+        "overflow":"hidden",
+        "text-overflow": "ellipsis"
+    }
+
+    return str(math.ceil(prog_bar_width))+"%", prog_bar_style, comp_hist_style, hist

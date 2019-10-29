@@ -4,6 +4,7 @@ import os.path
 import pandas as pd
 import matplotlib
 import matplotlib.pyplot as plt
+import plotly.graph_objs as go
 import sys
 
 from modelController.controller import Controller
@@ -18,6 +19,43 @@ def create_df(filepath):
         # First column is the index column
         df = pd.read_csv(filepath, index_col=0)
     return df
+
+def simulate_generator(num_agents, strategy, call_protocol, num_sim=1000):
+    """Performs num_sim simulation of the program with certain values for the parameters.
+    
+    This function however, will not save results to a csv file. It is a generator, meaning
+    it yields the timesteps counters after every iteration.
+    """
+    timesteps_counters = {}
+    mc = Controller(num_agents, strategy, call_protocol)
+    mc.update(num_agents, strategy, call_protocol)
+
+    for i in range(num_sim):
+        mc.start_simulation(print_message=False)
+        while not mc.simulation_finished:
+            mc.simulate(print_message=False)
+
+        if mc.simulation_finished:
+            if str(mc.timesteps_taken) in timesteps_counters:
+                timesteps_counters[str(mc.timesteps_taken)] += 1
+            else:
+                timesteps_counters[str(mc.timesteps_taken)] = 1
+            mc.reset_simulation(print_message=False)
+            mc.update(num_agents, strategy, call_protocol)
+        yield timesteps_counters
+
+def make_histogram_for_frontend(counters):
+    timesteps = tuple(counters.keys())
+    counts = tuple(counters.values())
+    fig = go.Figure(
+        [go.Bar(x=timesteps, y=counts)],
+        layout=go.Layout(
+            title="Counts of #Timesteps Taken",
+            xaxis_title = "Timesteps Taken",
+            yaxis_title = "Counts"
+        )
+    )
+    return fig
 
 def simulate(num_agents, strategy, call_protocol, sims_filepath, num_sim=1000):
     """Perform num_sim simulations of the program with certain values for the parameters.
@@ -106,6 +144,7 @@ def make_histogram(num_agents, strategy, call_protocol, df_filepath):
 
 if __name__ == "__main__":
     # Try the simulations for these values of num_agents
+    ################################################## Uncomment for simulations!
     if len(sys.argv) != 2:
         exit("wrong number of arguments, give filename as an argument")
 
@@ -128,3 +167,4 @@ if __name__ == "__main__":
                 print(f"Something went wrong during {strategy}")
                 print(e)
                 continue
+    #############################################################################
