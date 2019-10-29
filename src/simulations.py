@@ -39,6 +39,7 @@ def simulate(num_agents, strategy, call_protocol, sims_filepath, num_sim=1000):
     new_rows = pd.DataFrame(columns=['Num Simulations', 'Num Agents', 'Strategy', 'Call Protocol', 'Timesteps Taken'])
 
     mc = Controller(num_agents, strategy, call_protocol)
+    mc.update(num_agents, strategy, call_protocol)
     # Start the simulations and record the timesteps taken
 
     total_timesteps_taken = 0
@@ -56,6 +57,7 @@ def simulate(num_agents, strategy, call_protocol, sims_filepath, num_sim=1000):
             new_rows = new_rows.append(new_row, ignore_index=True)
             total_timesteps_taken += mc.timesteps_taken
             mc.reset_simulation(print_message=False)
+            mc.update(num_agents, strategy, call_protocol)
 
         # Prints the progress
         print(f"Num agents: {num_agents}, Strategy: {strategy} -- Iteration: {i+1} / {num_sim}", end='\r')
@@ -63,7 +65,9 @@ def simulate(num_agents, strategy, call_protocol, sims_filepath, num_sim=1000):
 
     df = df.append(new_rows)
     df.to_csv(sims_filepath)
-
+    print("1 iter + all")
+    print(mc.timesteps_taken)
+    print(total_timesteps_taken)
     # Select the rows of the DataFrame that use the settings given as arguments to this func (simulate)
     res_df = df.loc[(df['Num Agents'] == num_agents) & (df['Strategy'] == strategy) & (df['Call Protocol'] == call_protocol)]
     print(f"Settings:\nNum Agents: {num_agents}\nStrategy: {strategy}\nCall Protocol: {call_protocol}")
@@ -112,15 +116,15 @@ if __name__ == "__main__":
     if not os.path.isdir(data_dir):
         os.mkdir(data_dir)
 
-    num_agents_values = [500]
-    strategies = ["Call-Min-Secrets"]
+    num_agents_values = [10]
+    strategies = ["Mathematical"]
 
     for num_agents in num_agents_values:
         for strategy in strategies:
-            try:
-                simulate(num_agents, strategy, "Standard", sims_filepath)
-                make_histogram(num_agents, strategy, "Standard", sims_filepath)
-            except Exception as e:
-                print(f"Something went wrong during {strategy}")
-                print(e)
-                continue
+            # try:
+            simulate(num_agents, strategy, "Standard", sims_filepath)
+            # make_histogram(num_agents, strategy, "Standard", sims_filepath)
+            # except Exception as e:
+            #     print(f"Something went wrong during {strategy}")
+            #     print(e)
+            #     continue
