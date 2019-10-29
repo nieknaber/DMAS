@@ -121,10 +121,10 @@ if __name__ == "__main__":
 
     for num_agents in num_agents_values:
         for strategy in strategies:
-            # try:
-            simulate(num_agents, strategy, "Standard", sims_filepath)
-            # make_histogram(num_agents, strategy, "Standard", sims_filepath)
-            # except Exception as e:
-            #     print(f"Something went wrong during {strategy}")
-            #     print(e)
-            #     continue
+            try:
+                simulate(num_agents, strategy, "Standard", sims_filepath)
+                make_histogram(num_agents, strategy, "Standard", sims_filepath)
+            except Exception as e:
+                print(f"Something went wrong during {strategy}")
+                print(e)
+                continue
