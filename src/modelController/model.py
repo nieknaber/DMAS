@@ -3,7 +3,7 @@ import random as rn
 
 class Model:
 
-    def __init__(self, strategy, call_protocol):
+    def __init__(self, strategy):
         """Initialises the controller.
 
         Arguments:
@@ -16,14 +16,12 @@ class Model:
         self.num_agents = 0
         self.connections = []
         self.strategy = strategy
-        self.call_protocol = call_protocol
         self.all_secrets = set()
 
     def make_callable_set(self, agent_calling, called_agents):
         callable_agents = self.agents.copy()
         callable_agents.remove(agent_calling)
-        if self.call_protocol == 'Standard':
-            return self.remove_agents_calling(callable_agents, called_agents)
+        callable_agents = self.remove_agents_calling(callable_agents, called_agents)
         # TODO: Either remove or improve/change this strategy
         # if self.strategy == 'Token-improved' or self.strategy == 'Spider-improved':
         #     return self.remove_completed_agents(callable_agents, agent_calling)

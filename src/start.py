@@ -8,5 +8,5 @@ from modelController.controller import Controller
 
 
 DEFAULT_NUM_AGENTS = 10
-mc = Controller(DEFAULT_NUM_AGENTS, "Random", "Standard")
+mc = Controller(DEFAULT_NUM_AGENTS, "Random")
 ui.run_ui(mc, DEFAULT_NUM_AGENTS)

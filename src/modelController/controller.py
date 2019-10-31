@@ -5,7 +5,7 @@ import numpy as np
 
 class Controller:
 
-    def __init__(self, num_agents, strategy, call_protocol):
+    def __init__(self, num_agents, strategy):
         """Initialises the controller.
 
         Arguments:
@@ -15,7 +15,7 @@ class Controller:
         strategy -- The strategy the agents will use.
         """
 
-        self.model = Model(strategy, call_protocol)
+        self.model = Model(strategy)
         self.timesteps_taken = 0
         self.simulation_finished = False
         self.started = False
@@ -30,7 +30,7 @@ class Controller:
 
         self.model.numpyAgents = np.array(self.model.agents)
 
-    def update(self, num_agents, strategy, call_protocol):
+    def update(self, num_agents, strategy):
         """This function updates the num_agents, num_connections and strategy fields.
         Then it calls the self.init_agents function so it re-initialises the agents list.
 
@@ -41,7 +41,6 @@ class Controller:
         strategy -- The strategy the agents will use.
         """
         if not self.started:
-            self.model.call_protocol = call_protocol
             self.model.strategy = strategy
             self.model.all_secrets = set()
             self.model.num_agents = num_agents
@@ -90,7 +89,7 @@ class Controller:
         print_message -- IF set to False, the message 'Simulation reset!' will
             not be printed to stdout
         """
-        self.__init__(self.model.num_agents, self.model.strategy, self.model.call_protocol)
+        self.__init__(self.model.num_agents, self.model.strategy)
         if print_message:
             print("Simulation reset!")
 

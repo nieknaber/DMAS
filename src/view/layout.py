@@ -71,14 +71,12 @@ def layout(default_num_agents, update_interval):
 		                            {'label': 'Random', 'value': 'Random'},
 		                            {'label': 'Call Me Once', 'value': 'Call-Me-Once'},
 		                            {'label': 'Learn New Secrets', 'value': 'Learn-New-Secrets'},
-		                            {'label': 'Call most useful', 'value': 'Most-useful'},
-		                            {'label': 'Call least secrets', 'value': 'Min-Secrets'},
-		                            {'label': 'Call most secrets', 'value': 'Max-Secrets'},
+		                            {'label': 'Balanced Secrets', 'value': 'Most-useful'},
+		                            {'label': 'Min Secrets', 'value': 'Min-Secrets'},
+		                            {'label': 'Max Secrets', 'value': 'Max-Secrets'},
 		                            {'label': 'Token', 'value': 'Token'},
 		                            {'label': 'Spider', 'value': 'Spider'},
-		                            {'label': 'Token (improved)', 'value': 'Token-improved'},
-		                            {'label': 'Spider (improved)', 'value': 'Spider-improved'},
-		                            {'label': 'Mathematical', 'value': 'Mathematical'},
+		                            {'label': 'Multiply', 'value': 'Mathematical'},
 		                            {'label': 'Divide', 'value': 'Divide'},
 		                            {'label': 'Bubble', 'value': 'Bubble'}
 		                        ],
@@ -86,18 +84,6 @@ def layout(default_num_agents, update_interval):
 		                        clearable=False
 		                    ),
 		                    id="output-strategy"
-		                ),
-		                html.Div(
-		                    dcc.Dropdown(
-		                        id='call_protocol',
-		                        options=[
-		                            {'label': 'Standard', 'value': 'Standard'},
-		                            {'label': 'Not Standard', 'value': 'Not-Standard'},
-		                        ],
-		                        value='Standard',
-		                        clearable=False
-		                    ),
-		                    id="output-protocol"
 		                ),
 		                html.Div(html.P(id='timestep')),
 		                dcc.Interval(

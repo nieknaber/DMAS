@@ -55,9 +55,8 @@ def run_ui(ctrl, def_num_agents):
     Output('timestep', 'children')],
     [Input('num_nodes','value'),
     Input('interval_component','n_intervals'),
-    Input('strategy','value'),
-    Input('call_protocol','value')])
-def render_graph(num_nodes, n_intervals, strategy, call_protocol):
+    Input('strategy','value')])
+def render_graph(num_nodes, n_intervals, strategy):
     """Creates the nodes-and-edges graph that is displayed in the web-browser.
 
     The decorator specifies which inputs and outputs this function has.
@@ -80,7 +79,7 @@ def render_graph(num_nodes, n_intervals, strategy, call_protocol):
     global base_figure
     global G
 
-    controller.update(num_nodes, strategy, call_protocol)
+    controller.update(num_nodes, strategy)
     simulation_finished = controller.simulate()
 
     # We only need to recompute the base graph whenever the number of agents changes
@@ -233,17 +232,6 @@ def disable_num_nodes_slider(start_clicks, comp_clicks):
         return False
 
 @app.callback(
-    Output('call_protocol', 'disabled'),
-    [Input('start_simulation', 'n_clicks'),
-    Input("comp_hist", "n_clicks")])
-def disable_num_nodes_slider(start_clicks, comp_clicks):
-    """Disables the call protocol menu, based on any input that needs to block it"""
-    if start_clicks is not None or comp_clicks is not None:
-        return True
-    else:
-        return False
-
-@app.callback(
     Output('comp_hist', 'disabled'),
     [Input('start_simulation', 'n_clicks'),
     Input("comp_hist", "n_clicks")])
@@ -341,16 +329,15 @@ def show_histogram(show_hist):
     Output('progress_interval', 'max_intervals')],
     [Input('comp_hist', 'n_clicks'),
     Input('num_nodes','value'),
-    Input('strategy','value'),
-    Input('call_protocol','value')])
-def compute_histogram(n_clicks, num_nodes, strategy, call_protocol):
+    Input('strategy','value')])
+def compute_histogram(n_clicks, num_nodes, strategy):
     if n_clicks is not None:
         global computing_histogram
         global generator
         global num_sims
         num_sims = 1000
         computing_histogram = True
-        generator = simulate_generator(num_nodes, strategy, call_protocol, num_sim=num_sims)
+        generator = simulate_generator(num_nodes, strategy, num_sim=num_sims)
         t = next(generator)
         return "Computing...", num_sims
     return "Compute Histogram", 0
