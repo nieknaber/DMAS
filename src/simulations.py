@@ -52,7 +52,10 @@ def make_histogram_for_frontend(counters):
         layout=go.Layout(
             title="Counts of #Timesteps Taken",
             xaxis_title = "Timesteps Taken",
-            yaxis_title = "Counts"
+            yaxis_title = "Counts",
+            autosize=False,
+            width=500,
+            height=500,
         )
     )
     return fig
