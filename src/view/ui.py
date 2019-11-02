@@ -63,15 +63,12 @@ def render_graph(num_nodes, n_intervals, strategy):
     Whenever one of the inputs changes in the Dash-app, this function is called.
     The inputs are:
         num_nodes -- The number of agents in the simulation (slider in Dash-app)
-        num_connections -- The maximal number of agents one agent can exchange
-            secrets with in one time-step (slider in Dash-app)
         n_intervals -- A value that increases every update_interval. This is used
             in order to update the graph when the simulation is running.
         strategy -- A string chosen from a Dropdown-menu in the Dash app.
             It specifies which strategy the agents should use.
     The outputs are:
         The graph-figure -- the actual nodes-and-edges graph displayed in the app
-        The graph-style -- CSS for the graph
         Number of time-steps -- The number of time-steps is displayed in a div in
             the Dash-app
     """
@@ -307,6 +304,12 @@ def reset_simulation(n_clicks):
     Output('interval_component', 'interval'),
     [Input('speed_factor', 'value')])
 def change_speed(speed_factor):
+    """This callback changes the interval of the simulation in the frontend.
+
+    The input argument 'speed_factor' is read from the slider in the UI.
+    This speed_factor starts out at 1, but when the speed_factor is changed,
+    the new update interval becomes update_interval / speed_factor
+    """
     new_interval = update_interval / speed_factor
     return int(new_interval)
 
@@ -316,6 +319,12 @@ def change_speed(speed_factor):
     Output('Hist', 'style')],
     [Input('show_hist', 'value')])
 def show_histogram(show_hist):
+    """Shows the histogram in the UI.
+
+    Triggered by the checklist where the only checkbox is show histogram.
+    The histogram will appear in place of the normal nodes-and-edges graph.
+    The input argument "show_hist" is the value of the checkbox.
+    """
     if show_hist:
         graph_style = {"display":"none"}
         hist_style = {"display":"block"}
@@ -331,6 +340,16 @@ def show_histogram(show_hist):
     Input('num_nodes','value'),
     Input('strategy','value')])
 def compute_histogram(n_clicks, num_nodes, strategy):
+    """Once the "Compute Histogram" button is pressed, this callback
+    will compute the histogram using functions from simulations.py.
+
+    Input arguments:
+        n_clicks -- the number of times the button is clicked.
+        num_ndoes -- The number of agents in the simulation.
+            This is read from the Number of agents slider in the UI.
+        strategy -- The strategy the agents should use in the simulation.
+            This is also read from the dropwdown menu in the UI.
+    """
     if n_clicks is not None:
         global computing_histogram
         global generator
@@ -350,6 +369,13 @@ def compute_histogram(n_clicks, num_nodes, strategy):
     [Input('progress_interval', 'n_intervals')],
     [State('Hist', 'figure')])
 def update_progress_bar(n_intervals, old_fig):
+    """This callback updates the progress bar.
+
+    Specifically, it increases the width of a green button and decreases 
+    the width of the compute histogram button. This causes the illusion of
+    the button (which is the container both buttons are in) gets filled with
+    a green colour, but it actually some CSS magic.
+    """
     global computing_histogram
     global generator
     global num_sims

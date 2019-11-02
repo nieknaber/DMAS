@@ -10,11 +10,8 @@ class Controller:
 
         Arguments:
         num_agents -- The number of agents that should be in the simulation.
-        num_connections -- The number of maximum connections an agent can make
-            during one time-step.
         strategy -- The strategy the agents will use.
         """
-
         self.model = Model(strategy)
         self.timesteps_taken = 0
         self.simulation_finished = False
@@ -28,16 +25,12 @@ class Controller:
             self.model.agents.append(Agent(i, f"Secret {i}", self.model.num_agents))
             self.model.all_secrets.add(f"Secret {i}")
 
-        self.model.numpyAgents = np.array(self.model.agents)
-
     def update(self, num_agents, strategy):
-        """This function updates the num_agents, num_connections and strategy fields.
+        """This function updates the num_agents and strategy fields.
         Then it calls the self.init_agents function so it re-initialises the agents list.
 
         Arguments:
         num_agents -- The number of agents that should be in the simulation.
-        num_connections -- The number of maximum connections an agent can make
-            during one time-step.
         strategy -- The strategy the agents will use.
         """
         if not self.started:
@@ -84,9 +77,9 @@ class Controller:
         """Resets the simulation (there is a button on the UI calling this function).
 
         It resets it by calling the self.__init__ function with the current values
-        for num_agents, num_connections and strategy as arguments.
+        for num_agents and strategy as arguments.
         Argument:
-        print_message -- IF set to False, the message 'Simulation reset!' will
+        print_message -- If set to False, the message 'Simulation reset!' will
             not be printed to stdout
         """
         self.__init__(self.model.num_agents, self.model.strategy)
@@ -108,9 +101,11 @@ class Controller:
         the simulation has finished during this time-step.
         The simulation is finished if every agent knows all secrets.
 
-        If the keyword argument 'print_secrets' is set to False, this function
-        will not print out the secrets of all the agents to stdout. This is useful
-        when doing the simulations without the use of the UI for statistical purposes.
+        Input arguments:
+        'print_secrets' -- When this is set to False, this function
+            will not print out the secrets of all the agents to stdout.
+            This is useful when doing the simulations without the use
+            of the UI for statistical purposes.
         """
         if self.started and not self.simulation_finished and not self.paused:
             self.model.exchange_secrets(self.timesteps_taken)

@@ -1,12 +1,4 @@
-# Agent properties:
-# Message
-# Current Connection
-# Connection history?
-# Message completed?
-# Strategy
-
 import numpy as np
-
 
 class Agent:
 
@@ -37,6 +29,14 @@ class Agent:
         self.secrets_known[self.id] = len(self.secrets)
 
     def update_secrets_known(self, other_agent_secrets_known):
+        """Updates the knowledge of this agent about how many secrets other agents know.
+
+        This is primarily used for some strategies, like the Min-Secrets, Max-Secrets and
+        Balanced-Secrets strategies.
+        Input arguments:
+            other_agent_secrets_known -- Another agent's list of knowledge about how many
+                secrets all the other agents know.
+        """
         for i in range(len(self.secrets_known) - 1):
             self.secrets_known[i] = max(self.secrets_known[i], other_agent_secrets_known[i])
 

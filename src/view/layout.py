@@ -1,3 +1,8 @@
+"""This file defines the layout of the app that is shown in a Browser,
+
+The components of this layout are all imported from dash_html_components and
+dash_core_components."""
+
 import dash_html_components as html
 import dash_core_components as dcc
 
@@ -77,7 +82,6 @@ def layout(default_num_agents, update_interval):
 		                            {'label': 'Token', 'value': 'Token'},
 		                            {'label': 'Spider', 'value': 'Spider'},
 		                            {'label': 'Multiply', 'value': 'Mathematical'},
-		                            {'label': 'Divide', 'value': 'Divide'},
 		                            {'label': 'Bubble', 'value': 'Bubble'}
 		                        ],
 		                        value = 'Random',

@@ -6,6 +6,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import plotly.graph_objs as go
 import sys
+import time
 
 from modelController.controller import Controller
 
@@ -45,6 +46,14 @@ def simulate_generator(num_agents, strategy, num_sim=1000):
         yield timesteps_counters
 
 def make_histogram_for_frontend(counters):
+    """Makes histograms for in the UI.
+    
+    These histograms are made with plotly, and is actually made by making a Bar
+    Chart. This is done because we already know the exact counts.
+    Arguments:
+        counters -- the dictionary with as keys the timesteps taken and as values
+        the counts of those timesteps taken
+    """
     timesteps = tuple(counters.keys())
     counts = tuple(counters.values())
     fig = go.Figure(
@@ -64,9 +73,10 @@ def simulate(num_agents, strategy, sims_filepath, num_sim=1000):
     """Perform num_sim simulations of the program with certain values for the parameters.
 
     Input arguments:
-    num_sim -- The number of simulations per configuration
     num_agents -- The number of agents in a simulation
     strategy -- The strategy the agents will use
+    sims_filepath -- The filepath where the dataframe is saved into
+    num_sim -- The number of simulations per configuration
 
     This function performs the simulations, and record the number of timesteps it takes for each
     iteration, after which the average and standard deviation of the number of timesteps taken
@@ -101,9 +111,6 @@ def simulate(num_agents, strategy, sims_filepath, num_sim=1000):
 
     df = df.append(new_rows)
     df.to_csv(sims_filepath)
-    print("1 iter + all")
-    print(mc.timesteps_taken)
-    print(total_timesteps_taken)
     # Select the rows of the DataFrame that use the settings given as arguments to this func (simulate)
     res_df = df.loc[(df['Num Agents'] == num_agents) & (df['Strategy'] == strategy)]
     print(f"There are {len(res_df['Timesteps Taken'])} entries in the csv file, using these settings.")
@@ -139,7 +146,6 @@ def make_histogram(num_agents, strategy, df_filepath):
 
 
 if __name__ == "__main__":
-    # Try the simulations for these values of num_agents
     ################################################## Uncomment for simulations!
     if len(sys.argv) != 2:
         exit("wrong number of arguments, give filename as an argument")
@@ -151,11 +157,14 @@ if __name__ == "__main__":
     if not os.path.isdir(data_dir):
         os.mkdir(data_dir)
 
-    num_agents_values = [10, 50, 100, 500]
-    strategies = ["Call-Me-Once"]
+    # These are the settings of the simulations that you want to test.
+    num_agents_values = [5]
+    strategies = ["Random", "Learn-New-Secrets", "Bubble", "Mathematical",
+     "Call-Me-Once", "Most-useful" , "Min-Secrets", "Max-Secrets", "Token", "Spider"]
 
     for num_agents in num_agents_values:
         for strategy in strategies:
+            start_time = time.time()
             try:
                 simulate(num_agents, strategy, sims_filepath)
                 make_histogram(num_agents, strategy, sims_filepath)
@@ -163,4 +172,6 @@ if __name__ == "__main__":
                 print(f"Something went wrong during {strategy}")
                 print(e)
                 continue
+            end_time = time.time() - start_time
+            print(f"Strat {strategy}, n = {num_agents}, took {end_time} seconds")
     #############################################################################
